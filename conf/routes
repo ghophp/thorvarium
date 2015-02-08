@@ -3,7 +3,8 @@
 # ~~~~
 
 GET     /                           controllers.Application.index
-POST    /login                      controllers.Application.login
+POST    /login                      controllers.Users.login
+POST    /status                     controllers.Users.status
 
 GET     /ws                         controllers.Application.ws
 

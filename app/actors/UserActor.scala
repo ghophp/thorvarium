@@ -7,7 +7,7 @@ import akka.actor.ActorRef
 import akka.actor.Props
 
 
-class UserActor(board: ActorRef, out: ActorRef) extends Actor with ActorLogging {
+class UserActor(uuid: String, board: ActorRef, out: ActorRef) extends Actor with ActorLogging {
 
   override def preStart() = {
     BoardActor() ! Subscribe
@@ -19,5 +19,5 @@ class UserActor(board: ActorRef, out: ActorRef) extends Actor with ActorLogging 
 }
 
 object UserActor {
-  def props(out: ActorRef) = Props(new UserActor(BoardActor(), out))
+  def props(uuid: String)(out: ActorRef) = Props(new UserActor(uuid, BoardActor(), out))
 }

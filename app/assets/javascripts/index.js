@@ -1,16 +1,10 @@
+var ws = null;
 $(window).ready(function(){
 
-  var ws = new WebSocket($("body").data("ws-url"));
-  ws.onmessage(function(event) {
-    var message = JSON.parse(event.data);
-    switch (message.type) {
-      case "message":
-        $("#board tbody").append("<tr><td>" + message.uid + "</td><td>" + message.msg + "</td></tr>");
-        break;
-      default:
-        console.log(message);
-    }
-  });
+  ws = new WebSocket($("body").data("ws-url"));
+  ws.onmessage = function(event) {
+    console.log(event);
+  };
 
   $("#msgform").submit(function(event){
 
