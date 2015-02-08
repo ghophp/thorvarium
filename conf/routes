@@ -3,6 +3,8 @@
 # ~~~~
 
 GET     /                           controllers.Application.index
+POST    /login                      controllers.Application.login
+
 GET     /ws                         controllers.Application.ws
 
 # Map static resources from the /public folder to the /assets URL path

@@ -11,7 +11,7 @@ $(window).ready(function(){
         console.log(message);
     }
   });
-run
+
   $("#msgform").submit(function(event){
 
     event.preventDefault();
