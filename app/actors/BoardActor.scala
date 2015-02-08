@@ -9,14 +9,15 @@ import play.libs.Akka
 import akka.actor.Props
 
 class BoardActor extends Actor with ActorLogging {
+
   var users = Set[ActorRef]()
 
   def receive = LoggingReceive {
     case m:Message => users map { _ ! m}
-    case Subscribe => {
+    case Subscribe =>
       users += sender
       context watch sender
-    }
+
     case Terminated(user) => users -= user
   }
 }

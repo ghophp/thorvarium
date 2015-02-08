@@ -52,7 +52,7 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
     val uid = "test"
 
     "relay messages from the board to the websocket" in new WithApplication {
-      val userActorRef = TestActorRef[UserActor](Props(new UserActor(uid, boardProbe.ref, socketActorProbe.ref)))
+      val userActorRef = TestActorRef[UserActor](Props(new UserActor(boardProbe.ref, socketActorProbe.ref)))
       val userActor = userActorRef.underlyingActor
 
       val text = "test message from board"
@@ -65,7 +65,7 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
     }
 
     "but not if they don't come from the board" in new WithApplication {
-      val userActorRef = TestActorRef[UserActor](Props(new UserActor(uid, boardProbe.ref, socketActorProbe.ref)))
+      val userActorRef = TestActorRef[UserActor](Props(new UserActor(boardProbe.ref, socketActorProbe.ref)))
       val userActor = userActorRef.underlyingActor
 
       val testMsg = Message("sender", "test message not from board")
