@@ -1,2 +1,4 @@
-# thorvarium
-multiplayer game server written in scala using akka
+##Thorvarium
+==============
+
+Multiplayer game server about spaceship
