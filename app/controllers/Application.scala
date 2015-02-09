@@ -6,7 +6,7 @@ import actors.UserActor
 import akka.actor.ActorSystem
 import com.redis.RedisClient
 import play.api.Play.current
-import play.api.libs.json.{JsValue}
+import play.api.libs.json.JsValue
 import play.api.mvc.{Action, Controller, WebSocket}
 import akka.util.Timeout
 
@@ -29,6 +29,7 @@ object Application extends Controller {
     var uuid = ""
     request.cookies.get("auth") match {
       case Some(auth) => uuid = auth.value
+      case None => uuid = ""
     }
 
     if (!uuid.isEmpty) {

@@ -14,7 +14,8 @@ import play.api.db.DB
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Future, Await}
 
-object Users extends Controller {
+trait Users {
+  this: Controller =>
 
   implicit val system = ActorSystem("redis-client")
   implicit val executionContext = system.dispatcher
@@ -102,5 +103,6 @@ object Users extends Controller {
       BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
     }
   }
-
 }
+
+object Users extends Controller with Users
