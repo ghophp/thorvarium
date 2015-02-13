@@ -1,108 +1,67 @@
 package controllers
 
-import java.security.MessageDigest
-import java.util.concurrent.TimeUnit
-
-import akka.actor.ActorSystem
-import com.redis.RedisClient
-import play.api.Play.current
 import play.api.libs.json.Json
-import play.api.mvc.{Result, Action, Controller}
-import akka.util.Timeout
-import play.api.db.DB
+import play.api.mvc.{Action, Controller}
+import models.User
+import session.{SessionRepository, SessionRepositoryComponentImpl}
 
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, Await}
-
-trait Users {
+trait Users extends SessionRepository {
   this: Controller =>
+    def login = Action { implicit request =>
 
-  implicit val system = ActorSystem("redis-client")
-  implicit val executionContext = system.dispatcher
-  implicit val timeout = Timeout(5, TimeUnit.SECONDS)
+      val params = request.body.asFormUrlEncoded.filter(k =>
+        k.get("nickname").isDefined || k.get("password").isDefined
+      )
 
-  val redis = RedisClient("localhost", 6379)
+      if (params.getOrElse(Map()).size >= 2) {
 
-  def login = Action { implicit request =>
+        val nickname: String = params.get.get("nickname").get(0)
+        val password: String = params.get.get("password").get(0)
 
-    val params:Map[String, Seq[String]] = request.body.asFormUrlEncoded.filter(
-      k => k.getOrElse("nickname", List()).size > 0 ||
-          k.getOrElse("password", List()).size > 0 ).getOrElse(Map[String, Seq[String]]())
+        if (!nickname.isEmpty && !password.isEmpty) {
 
-    if (params.size == 2) {
-
-      val nickname:String = params.get("nickname").get(0)
-      val password:String = params.get("password").get(0)
-
-      if (!nickname.isEmpty && !password.isEmpty) {
-
-        val hash = MessageDigest
-            .getInstance("MD5")
-            .digest(password.getBytes)
-            .map("%02x".format(_)).mkString
-
-        val conn = DB.getConnection()
-
-        try {
-
-          val stmt = conn.createStatement
-          val rs = stmt.executeQuery("SELECT * FROM user WHERE nickname = '"+
-              nickname+"' AND password = '"+
-              hash+"'")
-
-          if (rs.next()) {
-
-            val uuid = java.util.UUID.randomUUID.toString
-            redis.set(uuid, "" + rs.getInt("id") + "|" + System.currentTimeMillis())
-
-            Ok(Json.obj("status" -> "success", "uuid" -> uuid))
-
-          } else {
-            BadRequest(Json.obj("status" -> "error", "cause" -> "not_found"))
+          val users = User.findBy(nickname, password)
+          users.lift(0) match {
+            case Some(user) => Ok(Json.obj(
+              "status" -> "success",
+              "uuid" -> sessionManager.authorize(user)
+            ))
+            case None => BadRequest(Json.obj("status" -> "error", "cause" -> "user_not_found"))
           }
 
-        } finally {
-          conn.close()
+        } else {
+          BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
         }
-
       } else {
         BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
       }
-    } else {
-      BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
     }
-  }
 
-  def status = Action { implicit request =>
+    def status = Action { implicit request =>
 
-    val params:Map[String, Seq[String]] = request.body.asFormUrlEncoded.filter(
-      k => k.getOrElse("auth", List()).size > 0 ).getOrElse(Map[String, Seq[String]]())
+      val params = request.body.asFormUrlEncoded.filter(k =>
+        k.get("auth").isDefined
+      )
 
-    if (params.size == 1) {
+      if (params.getOrElse(Map()).size == 1) {
 
-      val uuid:String = params.get("auth").get(0)
-      if (!uuid.isEmpty) {
+        val uuid: String = params.get.get("auth").get(0)
+        if (!uuid.isEmpty) {
 
-        val future: Future[Result] = {
-
-          def f(x:Option[String]) = if (x != None) {
-            Ok(Json.obj("status" -> "success", "uuid" -> x.get))
-          } else {
-            BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
+          sessionManager.authorized(uuid) match {
+            case Some(s) => Ok(Json.obj("status" -> "success", "uuid" -> s))
+            case None => BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
           }
 
-          redis.get(uuid).map( k => f(k))
+        } else {
+          BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
         }
-
-        Await.result(future, Duration(5, TimeUnit.SECONDS))
-
       } else {
         BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
       }
-    } else {
-      BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
     }
-  }
 }
 
-object Users extends Controller with Users
+object Users extends Controller
+  with Users
+  with SessionRepositoryComponentImpl
