@@ -9,6 +9,7 @@ trait SessionRepository {
   def sessionManager: Session
 
   trait Session {
+    val redisClient : RedisClient
     def redis: RedisClient
     def uuid: String
     def authorize(user: User): String
@@ -21,10 +22,13 @@ trait SessionRepositoryComponentImpl extends SessionRepository {
   def sessionManager: Session = new SessionRepositoryImpl()
 
   class SessionRepositoryImpl extends Session {
+
+    val redisClient = new RedisClient(
+      Play.current.configuration.getString("redis.default.host").get,
+      Play.current.configuration.getInt("redis.default.port").get)
+
     def redis = {
-      new RedisClient(
-        Play.current.configuration.getString("redis.default.host").get,
-        Play.current.configuration.getInt("redis.default.port").get)
+      redisClient
     }
 
     def uuid : String = {
@@ -32,13 +36,13 @@ trait SessionRepositoryComponentImpl extends SessionRepository {
     }
 
     def authorize(user: User): String = {
-      uuid.map( id => {
-        redis.set(id, "" + user.id + "|" + System.currentTimeMillis()); id
-      } )
+      val id = uuid
+      redisClient.set(id, "" + user.id.get + "|" + System.currentTimeMillis())
+      id
     }
 
     def authorized(uuid: String): Option[String] = {
-      redis.get(uuid)
+      redisClient.get(uuid)
     }
   }
 }

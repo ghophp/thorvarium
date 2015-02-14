@@ -15,8 +15,11 @@ class BoardActor extends Actor with ActorLogging {
   def receive = LoggingReceive {
     case m:Message => users map { _ ! m}
     case Subscribe =>
+
       users += sender
       context watch sender
+
+      users map { _ ! BoardMembers("[\"[TT]Muro\", \"[SS]Jim\"]") }
 
     case Terminated(user) => users -= user
   }
@@ -28,4 +31,5 @@ object BoardActor {
 }
 
 case class Message(uuid: String, s: String)
+case class BoardMembers(s: String)
 object Subscribe

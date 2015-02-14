@@ -64,6 +64,67 @@ object UsersSpec extends PlaySpecification with Results with MockitoSugar with W
       bodyText must contain(SessionSpec.testUUID)
     }
   }
+  "UsersTestController#status" should {
+    "should return invalid_params in case of wrong parameters name" in {
+      val controller = new UsersTestController()
+      val result = controller.status().apply(FakeRequest())
+      val bodyText: String = contentAsString(result)
+      bodyText must contain("invalid_params")
+    }
+    "should return invalid_params and cause in case of empty values" in {
+
+      val controller = new UsersTestController()
+      val request = FakeRequest(Helpers.POST, controllers.routes.Users.status().url)
+          .withFormUrlEncodedBody(
+            "auth" -> "")
+
+      val result = call(controller.status, request)
+      val bodyText: String = contentAsString(result)
+      bodyText must contain("invalid_params")
+    }
+    "should return unauthorized in case of auth not found" in new CreateUser {
+
+      val controller = new UsersTestController()
+      val request = FakeRequest(Helpers.POST, controllers.routes.Users.login().url)
+          .withFormUrlEncodedBody(
+            "nickname" -> "test",
+            "password" -> "4297f44b13955235245b2497399d7a93")
+
+      val result = call(controller.login, request)
+      val bodyText: String = contentAsString(result)
+      bodyText must contain("success")
+
+      val requestStatus = FakeRequest(Helpers.POST, controllers.routes.Users.status().url)
+          .withFormUrlEncodedBody(
+            "auth" -> "xxx")
+
+      val resultStatus = call(controller.status, requestStatus)
+      val bodyStatusText: String = contentAsString(resultStatus)
+      bodyStatusText must contain("unauthorized")
+    }
+    "should return success and have uuid in case of user found" in new CreateUser {
+
+      val controller = new UsersTestController()
+      val request = FakeRequest(Helpers.POST, controllers.routes.Users.login().url)
+          .withFormUrlEncodedBody(
+            "nickname" -> "test",
+            "password" -> "4297f44b13955235245b2497399d7a93")
+
+      val result = call(controller.login, request)
+      val bodyText: String = contentAsString(result)
+      bodyText must contain("success")
+      bodyText must contain(SessionSpec.testUUID)
+
+      val requestStatus = FakeRequest(Helpers.POST, controllers.routes.Users.status().url)
+          .withFormUrlEncodedBody(
+            "auth" -> SessionSpec.testUUID)
+
+      val resultStatus = call(controller.status, requestStatus)
+      val bodyStatusText: String = contentAsString(resultStatus)
+      bodyStatusText must contain("success")
+      bodyStatusText must contain("1|")
+    }
+  }
 
   class CreateUser extends Scope {
     val userID = User.save(User(Some(1), "test", "4297f44b13955235245b2497399d7a93"))

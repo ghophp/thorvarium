@@ -9,4 +9,4 @@ POST    /status                     controllers.Users.status
 GET     /ws                         controllers.Application.ws
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /client/*file               controllers.Assets.at(path="/public", file)

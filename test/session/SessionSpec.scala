@@ -37,11 +37,9 @@ object SessionSpec extends PlaySpecification with WithTestDatabase with MockitoS
       sessionTest.sessionManager.authorize(testUser) mustEqual testUUID
     }
     "should be authorized after set on authorize" in {
-
       val sessionTest = new SessionTest()
       val uuid = sessionTest.sessionManager.authorize(testUser)
-
-      sessionTest.sessionManager.authorized(uuid) mustEqual Some(testUUID)
+      sessionTest.sessionManager.authorized(uuid) must beSome
     }
   }
 }

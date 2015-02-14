@@ -26,7 +26,7 @@ trait WithTestDatabase extends AroundExample {
 
     private def parseEvolutions = {
       import scala.collection.JavaConversions._
-      val evolutions = FileUtils.listFiles(app.getFile("conf/evolutions/default/"), Array("sql"), false)
+      val evolutions = FileUtils.listFiles(app.getFile("conf/evolutions/test/"), Array("sql"), false)
       evolutions.map { evolution =>
         val evolutionContent = FileUtils.readFileToString(evolution)
         val splittedEvolutionContent = evolutionContent.split("# --- !Ups")

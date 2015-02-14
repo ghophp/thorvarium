@@ -49,8 +49,8 @@ trait Users extends SessionRepository {
         if (!uuid.isEmpty) {
 
           sessionManager.authorized(uuid) match {
-            case Some(s) => Ok(Json.obj("status" -> "success", "uuid" -> s))
-            case None => BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
+            case Some(s) => Ok(Json.obj("status" -> "success", "value" -> s))
+            case None => BadRequest(Json.obj("status" -> "error", "cause" -> "unauthorized"))
           }
 
         } else {

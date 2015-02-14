@@ -11,7 +11,7 @@ import scala.concurrent.Future
 object Application extends Controller with SessionRepositoryComponentImpl {
 
   def index = Action { implicit request =>
-    Ok(views.html.login())
+    Ok("We are live!")
   }
 
   def ws = WebSocket.tryAcceptWithActor[JsValue, JsValue] { implicit request =>
