@@ -41,10 +41,30 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
 
       val userActorRef2 = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser2, boardProbe.ref, socketActorProbe.ref))
       val userActor2 = userActorRef2.underlyingActor
-      val testInvite = Json.obj("type" -> "invitation", "user" -> SessionSpec.testUser2.id)
+      val testInvite = Json.obj("type" -> "invitation", "to" -> SessionSpec.testUser2.id)
 
       userActor.receive(testInvite)
       boardProbe.expectMsg(Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+    }
+
+    "relay accept invitation to the board" in new WithApplication {
+
+      val boardProbe = new TestProbe(system)
+      val socketActorProbe = new TestProbe(system)
+
+      val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser, boardProbe.ref, socketActorProbe.ref))
+      val userActor = userActorRef.underlyingActor
+
+      val userActorRef2 = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser2, boardProbe.ref, socketActorProbe.ref))
+      val userActor2 = userActorRef2.underlyingActor
+
+      val testInvite = Json.obj("type" -> "invitation", "to" -> SessionSpec.testUser2.id)
+      val testAccept = Json.obj("type" -> "accept", "from" -> SessionSpec.testUser.id)
+
+      userActor.receive(testInvite)
+      userActor2.receive(testAccept)
+
+      boardProbe.expectMsg(Accept(SessionSpec.testUser2, SessionSpec.testUser.id.get))
     }
   }
 

@@ -37,7 +37,7 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
       assert(boardActor.users.contains((probe2.ref, SessionSpec.testUser2)))
     }
 
-    "and watch its users" in new WithApplication {
+    "watch its users" in new WithApplication {
 
       val probe1 = new TestProbe(system)
       val probe2 = new TestProbe(system)
@@ -65,6 +65,48 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
 
       probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
       probe1.expectMsg(BoardMembers(Json.arr(SessionSpec.testUser.toJson)))
+    }
+
+    "watch its invitations" in new WithApplication() {
+
+      val probe1 = new TestProbe(system)
+      val probe2 = new TestProbe(system)
+
+      val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
+      val boardActor = boardActorRef.underlyingActor
+
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
+
+      awaitCond(boardActor.users.size == 2)
+
+      probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+
+      awaitCond(boardActor.invitations.size == 1)
+
+      probe2.ref ! PoisonPill
+
+      awaitCond(boardActor.users.size == 1)
+      awaitCond(boardActor.invitations.size == 0)
+    }
+
+    "should not allow duplicated invitations" in new WithApplication() {
+
+      val probe1 = new TestProbe(system)
+      val probe2 = new TestProbe(system)
+
+      val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
+      val boardActor = boardActorRef.underlyingActor
+
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
+
+      awaitCond(boardActor.users.size == 2)
+
+      probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+      probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+
+      awaitCond(boardActor.invitations.size == 1)
     }
   }
 

@@ -31,13 +31,13 @@ angular.module( 'thorvarium.chat', [
 
   $scope.invite = function(user) {
     if(confirm('You want to invite '+user.nickname+' to play?')) {
-      $scope.ws.send(JSON.stringify({type: 'invitation', user: user.id}));
+      $scope.ws.send(JSON.stringify({type: 'invitation', to: user.id}));
     }
   };
 
   $scope.accept = function(invitation) {
-    if(confirm('You want to start the game with '+invitation.user.nickname+'?')) {
-      console.log('accept game');      
+    if(confirm('You want to start the game with '+invitation.from.nickname+'?')) {
+      $scope.ws.send(JSON.stringify({type: 'accept', from: invitation.from.id}));
     }
   };
 
@@ -86,12 +86,12 @@ angular.module( 'thorvarium.chat', [
           case 'invitation':
 
             var inviter = _.find($scope.members, function(x) {
-              return x.id == message.user;
+              return x.id == message.from;
             });
 
             if (angular.isDefined(inviter)) {
 
-              message.user = inviter;
+              message.from = inviter;
 
               $scope.$apply(function(){
                 $scope.messages.push(message);

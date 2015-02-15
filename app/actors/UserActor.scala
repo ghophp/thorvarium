@@ -12,6 +12,8 @@ import scala.xml.Utility
 
 class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with ActorLogging {
 
+  var game: ActorRef = null
+
   override def preStart() = {
     BoardActor() ! Subscribe(user)
   }
@@ -24,7 +26,9 @@ class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with A
         case "message" =>
           board ! Message(user, Utility.escape((command \ "content").as[String]))
         case "invitation" =>
-          board ! Invitation(user, (command \ "user").as[Long])
+          board ! Invitation(user, (command \ "to").as[Long])
+        case "accept" =>
+          board ! Accept(user, (command \ "from").as[Long])
         case other => log.error("Unhandled :: " + other)
       }
 
@@ -37,7 +41,10 @@ class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with A
     case invitation:Invitation if sender == board =>
       out ! Json.obj(
         "type" -> "invitation",
-        "user" -> invitation.user.id)
+        "from" -> invitation.from.id)
+
+    case StartGame =>
+      game = sender()
 
     case BoardMembers(members) if sender == board =>
       out ! Json.obj("command" -> "members", "value" -> members)
