@@ -62,6 +62,7 @@ module.exports = {
    */
   vendor_files: {
     js: [
+      'vendor/underscore/underscore-min.js',
       'vendor/angular/angular.js',
       'vendor/jquery/jquery.min.js',
       'vendor/angular-bootstrap/ui-bootstrap-tpls.min.js',
@@ -72,6 +73,7 @@ module.exports = {
       'vendor/angular-md5/angular-md5.min.js'
     ],
     maps: [
+      'vendor/underscore/underscore-min.map',
       'vendor/angular-md5/angular-md5.min.js.map'
     ],
     css: [

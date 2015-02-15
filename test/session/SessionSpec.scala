@@ -9,6 +9,7 @@ object SessionSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
   val testUUID : String = "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
   val testUser : User = User(Some(1), "test", "test")
+  val testUser2 : User = User(Some(2), "test2", "test2")
 
   def beforeAll() = {
     new SessionTest().sessionManager.redis.del(testUUID)

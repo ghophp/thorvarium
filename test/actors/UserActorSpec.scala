@@ -9,70 +9,27 @@ import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
 
 import play.api.libs.json.Json
+import session.SessionSpec
 
 @RunWith(classOf[JUnitRunner])
 class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationLike {
 
   "UserActor" should {
-
     val boardProbe = new TestProbe(system)
     val socketActorProbe = new TestProbe(system)
-    val uuid = "dd0d00bd-4946-4057-9749-078a840179d3"
 
     "relay messages to the board, along with its ID" in new WithApplication {
-      val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], uuid, boardProbe.ref, socketActorProbe.ref))
+
+      val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser, boardProbe.ref, socketActorProbe.ref))
       val userActor = userActorRef.underlyingActor
 
       val text = "test message"
-
-      val testMsg = Json.obj("msg" -> text)
-
-      userActor.receive(testMsg)
-
-      boardProbe.expectMsg(Message(uuid, text))
-
-    }
-
-    "escape its message" in new WithApplication {
-      val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], uuid, boardProbe.ref, socketActorProbe.ref))
-      val userActor = userActorRef.underlyingActor
-
-      val testMsg = Json.obj("msg" -> "<b>&</b>")
+      val testMsg = Json.obj("type" -> "message", "content" -> text)
 
       userActor.receive(testMsg)
 
-      boardProbe.expectMsg(Message(uuid, "&lt;b&gt;&amp;&lt;/b&gt;"))
-
-    }
-
-  }
-
-  "UserActor" should {
-    val boardProbe = new TestProbe(system)
-    val socketActorProbe = new TestProbe(system)
-    val uuid = "dd0d00bd-4946-4057-9749-078a840179d3"
-
-    "relay messages from the board to the websocket" in new WithApplication {
-      val userActorRef = TestActorRef[UserActor](Props(new UserActor(uuid, boardProbe.ref, socketActorProbe.ref)))
-      val userActor = userActorRef.underlyingActor
-
-      val text = "test message from board"
-
-      val testMsg = Message(uuid, text)
-
-      boardProbe.send(userActorRef, testMsg)
-      socketActorProbe.expectMsg(Json.obj("type" -> "message", "msg" -> text, "uuid" -> uuid))
-    }
-
-    "but not if they don't come from the board" in new WithApplication {
-      val userActorRef = TestActorRef[UserActor](Props(new UserActor(uuid, boardProbe.ref, socketActorProbe.ref)))
-      val userActor = userActorRef.underlyingActor
-
-      val testMsg = Message("sender", "test message not from board")
-
-      userActorRef.receive(testMsg)
-
-      socketActorProbe.expectNoMsg
+      boardProbe.expectMsg(Subscribe(SessionSpec.testUser))
+      boardProbe.expectMsg(Message(SessionSpec.testUser, text))
     }
   }
 

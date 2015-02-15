@@ -1,16 +1,16 @@
 <div class="row">
 	<div class="col-xs-4 members-list">
-		
+		<span class="member" ng-repeat="member in members">{{ member.nickname }}</span>
 	</div>
 	<div class="col-xs-8 board">
-		
+		<span class="message" ng-repeat="message in messages"><i class="user">{{ message.user.nickname }}:</i> {{ message.content }}</span>
 	</div>
 </div>
 <div class="row message-input-wrapper">
 	<div class="col-xs-8 col-xs-offset-4">
 		<form ng-submit="send()">
 			<div class="input-group">
-				<input type="text" class="form-control" placeholder="Type your message...">
+				<input type="text" class="form-control" ng-model="message" placeholder="Type your message...">
 				<span class="input-group-btn">
 					<button class="btn btn-default" type="submit">Send!</button>
 				</span>

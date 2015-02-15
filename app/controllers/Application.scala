@@ -17,8 +17,8 @@ object Application extends Controller with SessionRepositoryComponentImpl {
   def ws = WebSocket.tryAcceptWithActor[JsValue, JsValue] { implicit request =>
 
     request.cookies.get("auth") match {
-      case Some(auth) => Future.successful(sessionManager.redis.get(auth.value) match {
-        case Some(x) => Right(UserActor.props(x) _)
+      case Some(auth) => Future.successful(sessionManager.authorized(auth.value) match {
+        case Some(user) => Right(UserActor.props(user) _)
         case None => Left(Forbidden)
       })
       case None => Future.successful(Left(Forbidden))

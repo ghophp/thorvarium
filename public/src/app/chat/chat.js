@@ -17,24 +17,34 @@ angular.module( 'thorvarium.chat', [
 
 .controller( 'ChatCtrl', function ChatController( $scope ) {
 
+  $scope.ws = null;
   $scope.message = '';
+  $scope.members = [];
+  $scope.messages = [];
 
   $scope.send = function() {
-    if ($scope.message) {
-      console.log('send: ' + $scope.message);
+    if ($scope.message && $scope.ws) {
+      $scope.ws.send(JSON.stringify({type: 'message', content: $scope.message}));
+      $scope.message = '';
     }
   };
 
   if (angular.isDefined($.cookie('auth'))) {
 
-    var ws = new WebSocket(wsUrl);
-    ws.onmessage = function(message) {
+    $scope.ws = new WebSocket(wsUrl);
+    $scope.ws.onmessage = function(message) {
       
       message = $.parseJSON(message.data);
+      console.log('Received message: ', message);
+
       if (angular.isDefined(message.command)) {
 
         switch(message.command) {
           case 'members':
+
+            $scope.$apply(function(){
+              $scope.members = message.value;
+            });
 
           break;
           case 'receive':
@@ -44,7 +54,20 @@ angular.module( 'thorvarium.chat', [
 
         switch(message.type) {
           case 'message':
-            console.log(message.value);
+
+            var user = _.find($scope.members, function(x) {
+              return x.id == message.user;
+            });
+
+            if (angular.isDefined(user)) {
+
+              message.user = user;
+
+              $scope.$apply(function(){
+                $scope.messages.push(message);
+              });
+            }
+
           break;
         }
       }

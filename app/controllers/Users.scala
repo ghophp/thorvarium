@@ -49,7 +49,7 @@ trait Users extends SessionRepository {
         if (!uuid.isEmpty) {
 
           sessionManager.authorized(uuid) match {
-            case Some(s) => Ok(Json.obj("status" -> "success", "value" -> s))
+            case Some(s) => Ok(Json.obj("status" -> "success", "value" -> s.toJson.toString()))
             case None => BadRequest(Json.obj("status" -> "error", "cause" -> "unauthorized"))
           }
 

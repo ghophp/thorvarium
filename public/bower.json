@@ -9,7 +9,8 @@
     "angular-bootstrap": "~0.10.0",
     "angular-ui-router": "~0.2",
     "angular-md5": "*",
-    "jquery.cookie": "*"
+    "jquery.cookie": "*",
+    "underscore": "*"
   },
   "dependencies": {}
 }

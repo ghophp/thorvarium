@@ -1,5 +1,8 @@
 package actors
 
+import play.api.libs.json.Json
+import session.SessionSpec
+
 import scala.concurrent.duration.DurationInt
 import org.junit.runner.RunWith
 import org.specs2.mutable.SpecificationLike
@@ -24,44 +27,37 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
 
       assert(boardActor.users.size == 0)
 
-      probe1.send(boardActorRef, Subscribe)
-      probe2.send(boardActorRef, Subscribe)
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
 
-      awaitCond(boardActor.users.size == 2, 100 millis)
+      awaitCond(boardActor.users.size == 2)
 
-      assert(boardActor.users.contains(probe1.ref))
-      assert(boardActor.users.contains(probe2.ref))
+      assert(boardActor.users.contains((probe1.ref, SessionSpec.testUser)))
+      assert(boardActor.users.contains((probe2.ref, SessionSpec.testUser2)))
 
     }
 
-    "and broadcast messages" in new WithApplication {
-      val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
-      val boardActor = boardActorRef.underlyingActor
-
-      probe1.send(boardActorRef, Subscribe)
-      probe2.send(boardActorRef, Subscribe)
-
-      awaitCond(boardActor.users.size == 2, 100 millis)
-
-      val msg = Message("sender", "test message")
-      boardActorRef.receive(msg)
-      probe1.expectMsg(msg)
-      probe2.expectMsg(msg)
-    }
-    
     "and watch its users" in new WithApplication {
       val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
       val boardActor = boardActorRef.underlyingActor
 
-      probe1.send(boardActorRef, Subscribe)
-      probe2.send(boardActorRef, Subscribe)
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
 
-      awaitCond(boardActor.users.size == 2, 100 millis)
+      awaitCond(boardActor.users.size == 2)
       
       probe2.ref ! PoisonPill
       
-      awaitCond(boardActor.users.size == 1, 100 millis)
-      
+      awaitCond(boardActor.users.size == 1)
+    }
+
+    "return members at subscriptions" in new WithApplication() {
+
+      val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
+      val boardActor = boardActorRef.underlyingActor
+
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe1.expectMsg(BoardMembers(Json.arr(SessionSpec.testUser.toJson)))
     }
   }
 

@@ -13,7 +13,7 @@ trait SessionRepository {
     def redis: RedisClient
     def uuid: String
     def authorize(user: User): String
-    def authorized(uuid: String): Option[String]
+    def authorized(uuid: String): Option[User]
   }
 }
 
@@ -37,12 +37,15 @@ trait SessionRepositoryComponentImpl extends SessionRepository {
 
     def authorize(user: User): String = {
       val id = uuid
-      redisClient.set(id, "" + user.id.get + "|" + System.currentTimeMillis())
+      redisClient.set(id, user.toJson.toString())
       id
     }
 
-    def authorized(uuid: String): Option[String] = {
-      redisClient.get(uuid)
+    def authorized(uuid: String): Option[User] = {
+      redisClient.get(uuid) match {
+        case Some(x:String) => Some(User.fromJson(x))
+        case None => None
+      }
     }
   }
 }
