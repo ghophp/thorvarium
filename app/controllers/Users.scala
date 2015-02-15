@@ -24,7 +24,8 @@ trait Users extends SessionRepository {
           users.lift(0) match {
             case Some(user) => Ok(Json.obj(
               "status" -> "success",
-              "uuid" -> sessionManager.authorize(user)
+              "uuid" -> sessionManager.authorize(user),
+              "user" -> user.toJson
             ))
             case None => BadRequest(Json.obj("status" -> "error", "cause" -> "user_not_found"))
           }
@@ -49,7 +50,7 @@ trait Users extends SessionRepository {
         if (!uuid.isEmpty) {
 
           sessionManager.authorized(uuid) match {
-            case Some(s) => Ok(Json.obj("status" -> "success", "value" -> s.toJson.toString()))
+            case Some(s) => Ok(Json.obj("status" -> "success", "value" -> s.toJson))
             case None => BadRequest(Json.obj("status" -> "error", "cause" -> "unauthorized"))
           }
 

@@ -15,7 +15,7 @@ angular.module( 'thorvarium.chat', [
   });
 })
 
-.controller( 'ChatCtrl', function ChatController( $scope ) {
+.controller( 'ChatCtrl', function ChatController( $rootScope, $scope ) {
 
   $scope.ws = null;
   $scope.message = '';
@@ -26,6 +26,18 @@ angular.module( 'thorvarium.chat', [
     if ($scope.message && $scope.ws) {
       $scope.ws.send(JSON.stringify({type: 'message', content: $scope.message}));
       $scope.message = '';
+    }
+  };
+
+  $scope.invite = function(user) {
+    if(confirm('You want to invite '+user.nickname+' to play?')) {
+      $scope.ws.send(JSON.stringify({type: 'invitation', user: user.id}));
+    }
+  };
+
+  $scope.accept = function(invitation) {
+    if(confirm('You want to start the game with '+invitation.user.nickname+'?')) {
+      console.log('accept game');      
     }
   };
 
@@ -43,11 +55,11 @@ angular.module( 'thorvarium.chat', [
           case 'members':
 
             $scope.$apply(function(){
-              $scope.members = message.value;
+              $scope.members = _.filter(message.value, function(m) {
+                return m.id != $rootScope.user.id;
+              });
             });
 
-          break;
-          case 'receive':
           break;
         }
       } else if (angular.isDefined(message.type)) {
@@ -55,7 +67,8 @@ angular.module( 'thorvarium.chat', [
         switch(message.type) {
           case 'message':
 
-            var user = _.find($scope.members, function(x) {
+            var user = message.user == $scope.user.id ? angular.copy($scope.user) : 
+            _.find($scope.members, function(x) {
               return x.id == message.user;
             });
 
@@ -65,6 +78,24 @@ angular.module( 'thorvarium.chat', [
 
               $scope.$apply(function(){
                 $scope.messages.push(message);
+                $('.board').scrollTop($('.board').height());
+              });
+            }
+
+          break;
+          case 'invitation':
+
+            var inviter = _.find($scope.members, function(x) {
+              return x.id == message.user;
+            });
+
+            if (angular.isDefined(inviter)) {
+
+              message.user = inviter;
+
+              $scope.$apply(function(){
+                $scope.messages.push(message);
+                $('.board').scrollTop($('.board').height());
               });
             }
 

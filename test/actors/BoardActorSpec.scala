@@ -3,7 +3,6 @@ package actors
 import play.api.libs.json.Json
 import session.SessionSpec
 
-import scala.concurrent.duration.DurationInt
 import org.junit.runner.RunWith
 import org.specs2.mutable.SpecificationLike
 import org.specs2.time.NoTimeConversions
@@ -18,10 +17,12 @@ import akka.actor.PoisonPill
 class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with SpecificationLike with NoTimeConversions {
 
   "BoardActor" should {
-    val probe1 = new TestProbe(system)
-    val probe2 = new TestProbe(system)
 
     "accept subscriptions" in new WithApplication {
+
+      val probe1 = new TestProbe(system)
+      val probe2 = new TestProbe(system)
+
       val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
       val boardActor = boardActorRef.underlyingActor
 
@@ -34,10 +35,13 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
 
       assert(boardActor.users.contains((probe1.ref, SessionSpec.testUser)))
       assert(boardActor.users.contains((probe2.ref, SessionSpec.testUser2)))
-
     }
 
     "and watch its users" in new WithApplication {
+
+      val probe1 = new TestProbe(system)
+      val probe2 = new TestProbe(system)
+
       val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
       val boardActor = boardActorRef.underlyingActor
 
@@ -52,6 +56,9 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
     }
 
     "return members at subscriptions" in new WithApplication() {
+
+      val probe1 = new TestProbe(system)
+      val probe2 = new TestProbe(system)
 
       val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
       val boardActor = boardActorRef.underlyingActor

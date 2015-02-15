@@ -1,9 +1,18 @@
 <div class="row">
 	<div class="col-xs-4 members-list">
-		<span class="member" ng-repeat="member in members">{{ member.nickname }}</span>
+		<div ng-repeat="member in members">
+			<a href="javascript:void(0)" class="member" ng-click="invite(member)">{{ member.nickname }}</a>
+		</div>
 	</div>
 	<div class="col-xs-8 board">
-		<span class="message" ng-repeat="message in messages"><i class="user">{{ message.user.nickname }}:</i> {{ message.content }}</span>
+		<div ng-repeat="message in messages">
+			<span class="message" ng-if="message.type == 'message'">
+				<i class="user">{{ message.user.nickname }}:</i> {{ message.content }}
+			</span>
+			<span class="invitation" ng-if="message.type == 'invitation'">
+				<i class="user">{{ message.user.nickname }}</i> invited you to play. <a href="javascript:void(0)" ng-click="accept(message)">Play!</a>
+			</span>
+		</div>
 	</div>
 </div>
 <div class="row message-input-wrapper">

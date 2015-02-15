@@ -1,6 +1,7 @@
 .members-list {
 	background: #EAEAEA;
-	min-height: 300px;
+	height: 300px;
+	overflow-y: auto;
 
 	.member {
 		display: block;
@@ -9,15 +10,20 @@
 }
 .board {
 	background: #CCC;
-	min-height: 300px;
+	height: 300px;
+	overflow-y: auto;
 
-	.message {
+	.invitation, .message {
 		display: block;
 		margin: 7px 0;
 
 		.user {
 			font-weight: 600;
 		}
+	}
+
+	.invitation {
+		color: red;
 	}
 }
 

@@ -8,6 +8,7 @@ import akka.actor.Props
 import models.User
 import play.api.libs.json.{JsValue, Json}
 
+import scala.xml.Utility
 
 class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with ActorLogging {
 
@@ -20,7 +21,11 @@ class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with A
 
       val t = (command \ "type").as[String]
       t match {
-        case "message" => board ! Message(user, (command \ "content").as[String])
+        case "message" =>
+          board ! Message(user, Utility.escape((command \ "content").as[String]))
+        case "invitation" =>
+          board ! Invitation(user, (command \ "user").as[Long])
+        case other => log.error("Unhandled :: " + other)
       }
 
     case message:Message if sender == board =>
@@ -29,10 +34,15 @@ class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with A
         "content" -> message.message,
         "user" -> message.user.id)
 
+    case invitation:Invitation if sender == board =>
+      out ! Json.obj(
+        "type" -> "invitation",
+        "user" -> invitation.user.id)
+
     case BoardMembers(members) if sender == board =>
       out ! Json.obj("command" -> "members", "value" -> members)
 
-    case other => log.error(">>> Unhandled: " + other)
+    case other => log.error("Unhandled :: " + other)
   }
 }
 

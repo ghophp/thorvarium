@@ -16,7 +16,7 @@ angular.module( 'thorvarium.login', [
   });
 })
 
-.controller( 'LoginCtrl', function LoginController( $scope, md5 ) {
+.controller( 'LoginCtrl', function LoginController( $rootScope, $scope, md5 ) {
 
   $scope.nickname = '';
   $scope.password = '';
@@ -29,7 +29,11 @@ angular.module( 'thorvarium.login', [
         
         if (typeof result.uuid !== 'undefined') {
           
+          $rootScope.user = result.user;
+
           $.cookie('auth', result.uuid, { expires: 7, path: '/' });
+          $.cookie('user', JSON.stringify($scope.user), { expires: 7, path: '/' });
+
           $scope.$apply(function() {
             $scope.go('/chat');
           });

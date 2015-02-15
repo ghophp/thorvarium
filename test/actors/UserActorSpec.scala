@@ -15,10 +15,11 @@ import session.SessionSpec
 class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationLike {
 
   "UserActor" should {
-    val boardProbe = new TestProbe(system)
-    val socketActorProbe = new TestProbe(system)
 
-    "relay messages to the board, along with its ID" in new WithApplication {
+    "relay messages to the board" in new WithApplication {
+
+      val boardProbe = new TestProbe(system)
+      val socketActorProbe = new TestProbe(system)
 
       val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser, boardProbe.ref, socketActorProbe.ref))
       val userActor = userActorRef.underlyingActor
@@ -27,9 +28,23 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
       val testMsg = Json.obj("type" -> "message", "content" -> text)
 
       userActor.receive(testMsg)
-
-      boardProbe.expectMsg(Subscribe(SessionSpec.testUser))
       boardProbe.expectMsg(Message(SessionSpec.testUser, text))
+    }
+
+    "relay invitation to the board" in new WithApplication {
+
+      val boardProbe = new TestProbe(system)
+      val socketActorProbe = new TestProbe(system)
+
+      val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser, boardProbe.ref, socketActorProbe.ref))
+      val userActor = userActorRef.underlyingActor
+
+      val userActorRef2 = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser2, boardProbe.ref, socketActorProbe.ref))
+      val userActor2 = userActorRef2.underlyingActor
+      val testInvite = Json.obj("type" -> "invitation", "user" -> SessionSpec.testUser2.id)
+
+      userActor.receive(testInvite)
+      boardProbe.expectMsg(Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
     }
   }
 

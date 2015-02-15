@@ -14,7 +14,7 @@ angular.module( 'thorvarium', [
 .run( function run () {
 })
 
-.controller( 'AppCtrl', function AppCtrl ( $scope, $location ) {
+.controller( 'AppCtrl', function AppCtrl ( $rootScope, $scope, $location ) {
   
   $scope.go = function ( path ) {
     $location.path( path );
@@ -41,6 +41,10 @@ angular.module( 'thorvarium', [
       $scope.pageTitle = toState.data.pageTitle + ' | Thorvarium';
     }
   });
+
+  if(angular.isDefined($.cookie('user'))) {
+    $rootScope.user = $.parseJSON($.cookie('user'));
+  }
 
 })
 

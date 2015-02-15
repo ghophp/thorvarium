@@ -16,6 +16,11 @@ class BoardActor extends Actor with ActorLogging {
 
   def receive = LoggingReceive {
     case message:Message => users map { _._1 ! message}
+    case invite:Invitation =>
+      users.find( u => u._2.id.get == invite.invited ) match {
+        case Some(x) => x._1 ! invite
+        case None => log.error("Invite user not on board :: " + invite.invited)
+      }
 
     case subscribe:Subscribe =>
       users += (sender -> subscribe.user)
@@ -28,7 +33,7 @@ class BoardActor extends Actor with ActorLogging {
           users -= x
           context unwatch x._1
           users map { _._1 ! members }
-        case None => log.error(">>> Terminated actor not found")
+        case None => log.error("Terminated actor not found")
       }
   }
 
@@ -43,5 +48,6 @@ object BoardActor {
 }
 
 case class Message(user: User, message: String)
+case class Invitation(user: User, invited: Long)
 case class BoardMembers(members: JsValue)
 case class Subscribe(user: User)
