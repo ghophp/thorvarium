@@ -81,7 +81,7 @@ class BoardActor extends Actor with ActorLogging {
     BoardMembers(Json.toJson(users.map( u => u._2.toJson )))
   }
 
-  def terminate(node: (ActorRef, User)) = {
+  def terminate(node: (ActorRef, User)) : Unit = {
     users -= node
     context unwatch node._1
     users map { _._1 ! members }
@@ -91,7 +91,7 @@ class BoardActor extends Actor with ActorLogging {
         .map( invitations -= _ )
   }
 
-  def terminate(ref : ActorRef) = {
+  def terminate(ref : ActorRef) : Unit = {
     users.find( u => u._1 == ref ) match {
       case Some(x) => terminate(x)
       case None => log.error("Terminated actor not found")

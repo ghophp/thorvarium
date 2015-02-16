@@ -16,13 +16,16 @@ import akka.actor.PoisonPill
 @RunWith(classOf[JUnitRunner])
 class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with SpecificationLike with NoTimeConversions {
 
-  trait TwoActorProbe {
-
+  trait TwoActorProbe extends WithApplication {
     val probe1 = new TestProbe(system)
     val probe2 = new TestProbe(system)
 
     val boardActorRef = TestActorRef[BoardActor](Props[BoardActor])
     val boardActor = boardActorRef.underlyingActor
+  }
+
+  trait ThreeActorProbe extends TwoActorProbe {
+    val probe3 = new TestProbe(system)
   }
 
   "BoardActor" should {
@@ -73,23 +76,47 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
 
       probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
       probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
-
-      awaitCond(boardActor.users.size == 2)
-
       probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
       probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
 
       awaitCond(boardActor.invitations.size == 1)
     }
 
-    "should not allow duplicated invitations" in new WithApplication with TwoActorProbe {
+    "should not allow accept non existing invitations" in new WithApplication with ThreeActorProbe {
+
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
+      probe3.send(boardActorRef, Subscribe(SessionSpec.testUser3))
+      probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+      probe3.send(boardActorRef, Accept(SessionSpec.testUser3, SessionSpec.testUser2.id.get))
+
+      awaitCond(boardActor.invitations.size == 1)
+      awaitCond(boardActor.users.size == 3)
+    }
+
+    "on accept invitation create a game removing users from board" in new WithApplication with ThreeActorProbe {
 
       probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
       probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
       probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
-      probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+      probe2.send(boardActorRef, Accept(SessionSpec.testUser2, SessionSpec.testUser.id.get))
 
-      awaitCond(boardActor.invitations.size == 1)
+      awaitCond(boardActor.invitations.size == 0)
+      awaitCond(boardActor.games.size == 1)
+      awaitCond(boardActor.users.size == 0)
+    }
+
+    "on accept invitation users receive start game message" in new WithApplication with ThreeActorProbe {
+
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser2))
+      probe1.send(boardActorRef, Invitation(SessionSpec.testUser, SessionSpec.testUser2.id.get))
+      probe2.send(boardActorRef, Accept(SessionSpec.testUser2, SessionSpec.testUser.id.get))
+
+      probe2.expectMsgClass(classOf[BoardMembers])
+      probe2.expectMsgClass(classOf[Invitation])
+      probe2.expectMsgClass(classOf[BoardMembers])
+      probe2.expectMsg(StartGame)
     }
   }
 
