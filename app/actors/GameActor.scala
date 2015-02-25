@@ -9,27 +9,39 @@ import models.User
 
 class GameActor(id: String) extends Actor with ActorLogging {
 
-  var host:(ActorRef, User) = null
-  var guest:(ActorRef, User) = null
-
   var players = Set[(ActorRef, User)]()
+  var board : ActorRef = BoardActor()
 
   def receive = LoggingReceive {
 
     case subscribe:SubscribeGame =>
       players += (subscribe.actor -> subscribe.user)
       context watch subscribe.actor
-      subscribe.actor ! StartGame
+
+      if (players.size >= 2) {
+        players.map { _._1 ! StartGame(id, players.map { _._2 } ) }
+      }
 
     case Terminated(user) =>
       players.find( u => u._1 == user ) match {
         case Some(x) =>
+
           players -= x
           context unwatch x._1
+
+          players.map { _._1 ! Won }
+          board ! EndGame(id)
+
+          context stop self
+
         case None => log.error("Terminated actor not found")
       }
   }
 }
 
 case class SubscribeGame(actor: ActorRef, user: User)
-object StartGame
+case class StartGame(id : String, players : Set[User])
+case class EndGame(id : String)
+
+object Won
+object Lose

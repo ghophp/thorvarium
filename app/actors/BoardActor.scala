@@ -69,6 +69,9 @@ class BoardActor extends Actor with ActorLogging {
         case None => log.error("Invited user not on board :: " + accept.to)
       }
 
+    case end:EndGame =>
+      games -= end.id
+
     case subscribe:Subscribe =>
       users += (sender -> subscribe.user)
       context watch sender

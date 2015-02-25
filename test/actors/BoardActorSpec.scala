@@ -116,7 +116,7 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
       probe2.expectMsgClass(classOf[BoardMembers])
       probe2.expectMsgClass(classOf[Invitation])
       probe2.expectMsgClass(classOf[BoardMembers])
-      probe2.expectMsg(StartGame)
+      probe2.expectMsgClass(classOf[StartGame])
     }
   }
 

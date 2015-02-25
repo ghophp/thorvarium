@@ -19,11 +19,13 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
     val boardProbe = new TestProbe(system)
     val socketActorProbe = new TestProbe(system)
 
-    val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser, boardProbe.ref, socketActorProbe.ref))
+    val userActorRef = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser, socketActorProbe.ref))
     val userActor = userActorRef.underlyingActor
+    userActor.board = boardProbe.ref
 
-    val userActorRef2 = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser2, boardProbe.ref, socketActorProbe.ref))
+    val userActorRef2 = TestActorRef[UserActor](Props(classOf[UserActor], SessionSpec.testUser2, socketActorProbe.ref))
     val userActor2 = userActorRef2.underlyingActor
+    userActor2.board = boardProbe.ref
   }
 
   "UserActor" should {

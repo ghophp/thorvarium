@@ -15,9 +15,8 @@ angular.module( 'thorvarium.chat', [
   });
 })
 
-.controller( 'ChatCtrl', function ChatController( $rootScope, $scope ) {
+.controller( 'ChatCtrl', function ChatController( $rootScope, $scope, Game ) {
 
-  $scope.ws = null;
   $scope.message = '';
   $scope.members = [];
   $scope.messages = [];
@@ -49,9 +48,9 @@ angular.module( 'thorvarium.chat', [
       message = $.parseJSON(message.data);
       console.log('Received message: ', message);
 
-      if (angular.isDefined(message.command)) {
+      if (angular.isDefined(message.type)) {
 
-        switch(message.command) {
+        switch(message.type) {
           case 'members':
 
             $scope.$apply(function(){
@@ -61,10 +60,6 @@ angular.module( 'thorvarium.chat', [
             });
 
           break;
-        }
-      } else if (angular.isDefined(message.type)) {
-
-        switch(message.type) {
           case 'message':
 
             var user = message.user == $scope.user.id ? angular.copy($scope.user) : 
@@ -100,6 +95,20 @@ angular.module( 'thorvarium.chat', [
             }
 
           break;
+          case 'game':
+
+            if (angular.isDefined(message.id)) {
+
+              var players = _.filter($scope.members, function(x) {
+                return typeof _.find(message.players, function(i) { return i.id == x.id; }) !== 'undefined';
+              });
+
+              Game.create(message.id, players);
+              $scope.go('/game');
+
+            }            
+
+            break;
         }
       }
     };

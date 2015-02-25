@@ -10,12 +10,13 @@ import play.api.libs.json.{JsValue, Json}
 
 import scala.xml.Utility
 
-class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with ActorLogging {
+class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
 
   var game: ActorRef = null
+  var board: ActorRef = BoardActor()
 
   override def preStart() = {
-    BoardActor() ! Subscribe(user)
+     board ! Subscribe(user)
   }
 
   def receive = LoggingReceive {
@@ -43,16 +44,35 @@ class UserActor(user: User, board: ActorRef, out: ActorRef) extends Actor with A
         "type" -> "invitation",
         "from" -> invitation.from.id)
 
-    case StartGame =>
+    case s:StartGame =>
       game = sender()
+      out ! Json.obj(
+        "type" -> "game",
+        "id" -> s.id,
+        "players" -> Json.arr(s.players.map(u => u.id)))
+
+    case Won =>
+      endGame()
+      out ! Json.obj("type" -> "won")
+
+    case Lose =>
+      endGame()
+      out ! Json.obj("type" -> "lose")
 
     case BoardMembers(members) if sender == board =>
-      out ! Json.obj("command" -> "members", "value" -> members)
+      out ! Json.obj(
+        "type" -> "members",
+        "value" -> members)
 
     case other => log.error("Unhandled :: " + other)
+  }
+
+  def endGame() = {
+    game = null
+    board ! Subscribe(user)
   }
 }
 
 object UserActor {
-  def props(user: User)(out: ActorRef) = Props(new UserActor(user, BoardActor(), out))
+  def props(user: User)(out: ActorRef) = Props(new UserActor(user, out))
 }

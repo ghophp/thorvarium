@@ -4,6 +4,7 @@ angular.module( 'thorvarium', [
   'thorvarium.home',
   'thorvarium.login',
   'thorvarium.chat',
+  'thorvarium.game',
   'ui.router'
 ])
 
@@ -16,6 +17,8 @@ angular.module( 'thorvarium', [
 
 .controller( 'AppCtrl', function AppCtrl ( $rootScope, $scope, $location ) {
   
+  $scope.ws = null;
+
   $scope.go = function ( path ) {
     $location.path( path );
   };
