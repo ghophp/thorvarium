@@ -6,8 +6,6 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala)
 
 scalaVersion := "2.11.1"
 
-javaOptions in Test ++= Option(System.getProperty("config.file")).map("-Dconfig.file=" + _).toSeq
-
 libraryDependencies ++= Seq(
   jdbc,
   anorm,

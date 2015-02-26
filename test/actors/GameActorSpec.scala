@@ -2,6 +2,7 @@ package actors
 
 import akka.actor.{PoisonPill, Props}
 import akka.testkit.{TestActorRef, TestProbe}
+import integration.WithTestDatabase
 import org.junit.runner.RunWith
 import org.specs2.mutable.SpecificationLike
 import org.specs2.runner.JUnitRunner
@@ -9,7 +10,7 @@ import play.api.test.WithApplication
 import session.SessionSpec
 
 @RunWith(classOf[JUnitRunner])
-class GameActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationLike {
+class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationLike with WithTestDatabase {
 
   val testGameId = SessionSpec.testUser.id.get + "-" + SessionSpec.testUser2.id.get
 
@@ -32,6 +33,11 @@ class GameActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
 
   "GameActor" should {
 
+    "have weapons and persons at start" in new WithApplication with GameProbe {
+      assert(gameActor.persons.size == 3)
+      assert(gameActor.weapons.size == 3)
+    }
+
     "should inform users on game get two players" in new WithApplication with GameProbe {
 
       assert(gameActor.players.size == 0)
@@ -45,7 +51,7 @@ class GameActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
       userActor2.game mustNotEqual null
     }
 
-    "one of the users should win the game in case of the other terminate" in new WithApplication with GameProbe {
+    "one of the users should win the game in case of the other lose connection" in new WithApplication with GameProbe {
 
       assert(gameActor.players.size == 0)
 

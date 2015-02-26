@@ -1,26 +1,42 @@
 package actors
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
+import akka.actor._
 import akka.event.LoggingReceive
-import akka.actor.ActorRef
-import akka.actor.Terminated
-import models.User
+import models.{Weapon, Person, Player, User}
+import org.joda.time.DateTime
+import scala.concurrent.duration._
 
 class GameActor(id: String) extends Actor with ActorLogging {
 
-  var players = Set[(ActorRef, User)]()
+  val system = ActorSystem("GameActor")
+
+  var players = Set[(ActorRef, Player)]()
   var board : ActorRef = BoardActor()
+
+  val persons = Person.list
+  val weapons = Weapon.list
+
+  var stepTimer : Cancellable = null
 
   def receive = LoggingReceive {
 
     case subscribe:SubscribeGame =>
-      players += (subscribe.actor -> subscribe.user)
+      players += (subscribe.actor -> new Player(subscribe.user, Map.empty))
       context watch subscribe.actor
 
       if (players.size >= 2) {
         players.map { _._1 ! StartGame(id, players.map { _._2 } ) }
       }
+
+    case Options =>
+      sender() ! GameOptions(persons, weapons, DateTime.now().getMillis)
+
+      import system.dispatcher
+
+      stepTimer = system.scheduler.schedule(0 milliseconds,
+        40 seconds,
+        self,
+        NothingSelected);
 
     case Terminated(user) =>
       players.find( u => u._1 == user ) match {
@@ -40,8 +56,12 @@ class GameActor(id: String) extends Actor with ActorLogging {
 }
 
 case class SubscribeGame(actor: ActorRef, user: User)
-case class StartGame(id : String, players : Set[User])
+case class StartGame(id : String, players : Set[Player])
 case class EndGame(id : String)
+case class GameOptions(persons: List[Person], weapons: List[Weapon], now: Long)
+
+object Options
+object NothingSelected
 
 object Won
 object Lose
