@@ -17,7 +17,6 @@ angular.module( 'thorvarium.game', [
 
 .controller( 'GameCtrl', function GameController( $rootScope, $scope, Game ) {
 
-  /*
   if ($scope.ws && Game.id) {
 
     $scope.ws.onmessage = function(message) {
@@ -43,23 +42,32 @@ angular.module( 'thorvarium.game', [
   } else {
     $scope.go('/chat');
   }
-  */
- 
+  
 })
 
 .service('Game', function() {
 
   this.id = null;
   this.players = [];
+  this.persons = [];
+  this.weapons = [];
 
-  this.create = function(id, players) {
+  this.start = null;
+
+  this.create = function(id, players, persons, weapons, start) {
     this.id = id;
     this.players = players;
+    this.persons = persons;
+    this.weapons = weapons;
+    this.start = start;
   };
 
   this.destroy = function() {
     this.id = null;
     this.players = [];
+    this.persons = [];
+    this.weapons = [];
+    this.start = null;
   };
 
   return this;

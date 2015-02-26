@@ -3,17 +3,14 @@ package actors
 import play.api.libs.json.Json
 import session.SessionSpec
 
-import org.junit.runner.RunWith
 import org.specs2.mutable.SpecificationLike
 import org.specs2.time.NoTimeConversions
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
 import play.api.test.WithApplication
-import org.specs2.runner.JUnitRunner
 import akka.actor.PoisonPill
 
-@RunWith(classOf[JUnitRunner])
 class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with SpecificationLike with NoTimeConversions {
 
   trait TwoActorProbe extends WithApplication {
@@ -39,8 +36,8 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
 
       awaitCond(boardActor.users.size == 2)
 
-      assert(boardActor.users.contains((probe1.ref, SessionSpec.testUser)))
-      assert(boardActor.users.contains((probe2.ref, SessionSpec.testUser2)))
+      assert(boardActor.users.contains(probe1.ref))
+      assert(boardActor.users.contains(probe2.ref))
     }
 
     "watch its users" in new WithApplication with TwoActorProbe {

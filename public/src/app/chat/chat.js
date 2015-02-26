@@ -103,7 +103,12 @@ angular.module( 'thorvarium.chat', [
                 return typeof _.find(message.players, function(i) { return i.id == x.id; }) !== 'undefined';
               });
 
-              Game.create(message.id, players);
+              Game.create(message.id, 
+                players,
+                message.persons,
+                message.weapons,
+                new Date(message.now));
+              
               $scope.go('/game');
 
             }            

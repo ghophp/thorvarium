@@ -1,8 +1,6 @@
 package actors
 
-import org.junit.runner.RunWith
 import org.specs2.mutable.SpecificationLike
-import org.specs2.runner.JUnitRunner
 import play.api.test.WithApplication
 import akka.actor.Props
 import akka.testkit.TestActorRef
@@ -11,7 +9,6 @@ import akka.testkit.TestProbe
 import play.api.libs.json.Json
 import session.SessionSpec
 
-@RunWith(classOf[JUnitRunner])
 class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationLike {
 
   class BoardProbe {

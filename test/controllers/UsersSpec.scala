@@ -122,7 +122,7 @@ object UsersSpec extends PlaySpecification with Results with MockitoSugar with W
       val resultStatus = call(controller.status, requestStatus)
       val bodyStatusText: String = contentAsString(resultStatus)
       bodyStatusText must contain("success")
-      bodyStatusText must contain("\"id\": 1")
+      bodyStatusText must contain("\"id\":1")
     }
   }
 

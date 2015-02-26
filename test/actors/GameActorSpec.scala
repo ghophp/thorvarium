@@ -1,20 +1,21 @@
 package actors
 
+import java.util.concurrent.TimeUnit
+
 import akka.actor.{PoisonPill, Props}
 import akka.testkit.{TestActorRef, TestProbe}
 import integration.WithTestDatabase
-import org.junit.runner.RunWith
 import org.specs2.mutable.SpecificationLike
-import org.specs2.runner.JUnitRunner
-import play.api.test.WithApplication
+import org.specs2.specification.Scope
 import session.SessionSpec
 
-@RunWith(classOf[JUnitRunner])
+import scala.concurrent.duration.Duration
+
 class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationLike with WithTestDatabase {
 
   val testGameId = SessionSpec.testUser.id.get + "-" + SessionSpec.testUser2.id.get
 
-  trait GameProbe extends WithApplication {
+  trait GameProbe extends Scope {
 
     val socketActorProbe = new TestProbe(system)
 
@@ -33,12 +34,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
   "GameActor" should {
 
-    "have weapons and persons at start" in new WithApplication with GameProbe {
-      assert(gameActor.persons.size == 3)
-      assert(gameActor.weapons.size == 3)
-    }
-
-    "should inform users on game get two players" in new WithApplication with GameProbe {
+    "should inform users when game get two players" in new GameProbe {
 
       assert(gameActor.players.size == 0)
 
@@ -51,7 +47,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       userActor2.game mustNotEqual null
     }
 
-    "one of the users should win the game in case of the other lose connection" in new WithApplication with GameProbe {
+    "one of the users should win the game in case of the other lose connection" in new GameProbe {
 
       assert(gameActor.players.size == 0)
 
@@ -62,6 +58,17 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
       probe2.expectMsgClass(classOf[StartGame])
       probe2.expectMsg(Won)
+    }
+
+    "if in 40 seconds both players have not selected persons and weapons the game end" in new GameProbe {
+
+      assert(gameActor.players.size == 0)
+
+      gameActorRef ! SubscribeGame(probe1.ref, SessionSpec.testUser)
+      gameActorRef ! SubscribeGame(probe2.ref, SessionSpec.testUser2)
+
+      probe2.expectMsgClass(classOf[StartGame])
+      probe2.expectMsg(Duration.create(50, TimeUnit.SECONDS), NothingSelected)
     }
   }
 

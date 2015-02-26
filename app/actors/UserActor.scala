@@ -30,8 +30,6 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
           board ! Invitation(user, (command \ "to").as[Long])
         case "accept" =>
           board ! Accept(user, (command \ "from").as[Long])
-        case "options" =>
-          game ! Options
         case other => log.error("Unhandled :: " + other)
       }
 
@@ -51,14 +49,14 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
       out ! Json.obj(
         "type" -> "game",
         "id" -> s.id,
-        "players" -> Json.arr(s.players.map(u => u.toJson)))
+        "players" -> s.players.map(u => u.toJson),
+        "persons" -> s.persons.map { _.toJson },
+        "weapons" -> s.weapons.map { _.toJson },
+        "now" -> s.now)
 
-    case opt:GameOptions =>
-      out ! Json.obj(
-        "type" -> "options",
-        "persons" -> Json.arr(opt.persons.map { _.toJson }),
-        "weapons" -> Json.arr(opt.weapons.map { _.toJson }),
-        "now" -> opt.now)
+    case NothingSelected if sender == game =>
+      endGame()
+      out ! Json.obj("type" -> "nothing_selected")
 
     case Won =>
       endGame()

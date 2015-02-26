@@ -13,8 +13,8 @@ import akka.actor.Props
 class BoardActor extends Actor with ActorLogging {
 
   var games = Map.empty[String, ActorRef]
-  var users = Set[(ActorRef, User)]()
-  var invitations = Set[(User, User)]()
+  var users = Map.empty[ActorRef, User]
+  var invitations = Map.empty[User, User]
 
   def getGame(id: String): ActorRef = {
     games contains id match {
@@ -53,7 +53,7 @@ class BoardActor extends Actor with ActorLogging {
               invitations.find( u => u._2 == accept.from && u._1 == x._2 ) match {
                 case Some(o) =>
 
-                  invitations -= o
+                  invitations -= o._1
                   terminate(x)
                   terminate(y)
 
@@ -85,13 +85,13 @@ class BoardActor extends Actor with ActorLogging {
   }
 
   def terminate(node: (ActorRef, User)) : Unit = {
-    users -= node
+    users -= node._1
     context unwatch node._1
     users map { _._1 ! members }
 
     invitations
         .filter( u => u._1.id == node._2.id || u._2.id == node._2.id )
-        .map( invitations -= _ )
+        .map( invitations -= _._1 )
   }
 
   def terminate(ref : ActorRef) : Unit = {
