@@ -36,8 +36,18 @@ class BoardActorSpec extends AbstractTestKit("BoardActorSpec") with Specificatio
 
       awaitCond(boardActor.users.size == 2)
 
-      assert(boardActor.users.contains(probe1.ref))
-      assert(boardActor.users.contains(probe2.ref))
+      assert(boardActor.users.contains(SessionSpec.testUser))
+      assert(boardActor.users.contains(SessionSpec.testUser2))
+    }
+
+    "not allow duplicated subscriptions" in new WithApplication with TwoActorProbe {
+
+      assert(boardActor.users.size == 0)
+
+      probe1.send(boardActorRef, Subscribe(SessionSpec.testUser))
+      probe2.send(boardActorRef, Subscribe(SessionSpec.testUser))
+
+      awaitCond(boardActor.users.size == 1)
     }
 
     "watch its users" in new WithApplication with TwoActorProbe {

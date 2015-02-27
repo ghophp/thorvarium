@@ -5,15 +5,10 @@ import models.User
 import org.scalatest.mock.MockitoSugar
 import play.api.test.PlaySpecification
 
-object SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSugar {
-
-  val testUUID : String = "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
-  val testUser : User = User(Some(1), "test", "test")
-  val testUser2 : User = User(Some(2), "test2", "test2")
-  val testUser3 : User = User(Some(3), "test3", "test3")
+class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSugar {
 
   def beforeAll() = {
-    new SessionTest().sessionManager.redis.del(testUUID)
+    new SessionTest().sessionManager.redis.del(SessionSpec.testUUID)
   }
 
   trait SessionTestComponentImpl extends SessionRepositoryComponentImpl {
@@ -22,7 +17,7 @@ object SessionSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
     class SessionTestRepositoryImpl extends SessionRepositoryImpl {
       override def uuid : String = {
-        testUUID
+        SessionSpec.testUUID
       }
     }
   }
@@ -36,12 +31,19 @@ object SessionSpec extends PlaySpecification with WithTestDatabase with MockitoS
     }
     "should return uuid on authorize" in {
       val sessionTest = new SessionTest()
-      sessionTest.sessionManager.authorize(testUser) mustEqual testUUID
+      sessionTest.sessionManager.authorize(SessionSpec.testUser) mustEqual SessionSpec.testUUID
     }
     "should be authorized after set on authorize" in {
       val sessionTest = new SessionTest()
-      val uuid = sessionTest.sessionManager.authorize(testUser)
+      val uuid = sessionTest.sessionManager.authorize(SessionSpec.testUser)
       sessionTest.sessionManager.authorized(uuid) must beSome
     }
   }
+}
+
+object SessionSpec extends SessionSpec {
+  val testUUID : String = "046b6c7f-0b8a-43b9-b35d-6489e6daee91"
+  val testUser : User = User(Some(1), "test", "test")
+  val testUser2 : User = User(Some(2), "test2", "test2")
+  val testUser3 : User = User(Some(3), "test3", "test3")
 }

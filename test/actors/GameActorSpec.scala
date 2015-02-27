@@ -38,8 +38,8 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
       assert(gameActor.players.size == 0)
 
-      gameActorRef ! SubscribeGame(userActorRef, SessionSpec.testUser)
-      gameActorRef ! SubscribeGame(userActorRef2, SessionSpec.testUser2)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser, userActorRef)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser2, userActorRef2)
 
       awaitCond(gameActor.players.size == 2)
 
@@ -51,8 +51,8 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
       assert(gameActor.players.size == 0)
 
-      gameActorRef ! SubscribeGame(probe1.ref, SessionSpec.testUser)
-      gameActorRef ! SubscribeGame(probe2.ref, SessionSpec.testUser2)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
 
       probe1.ref ! PoisonPill
 
@@ -64,8 +64,8 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
       assert(gameActor.players.size == 0)
 
-      gameActorRef ! SubscribeGame(probe1.ref, SessionSpec.testUser)
-      gameActorRef ! SubscribeGame(probe2.ref, SessionSpec.testUser2)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
 
       probe2.expectMsgClass(classOf[StartGame])
       probe2.expectMsg(Duration.create(50, TimeUnit.SECONDS), NothingSelected)

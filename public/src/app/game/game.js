@@ -17,7 +17,8 @@ angular.module( 'thorvarium.game', [
 
 .controller( 'GameCtrl', function GameController( $rootScope, $scope, Game ) {
 
-  if ($scope.ws && Game.id) {
+  console.log($rootScope.ws, Game.id);
+  if ($rootScope.ws && Game.id) {
 
     $scope.ws.onmessage = function(message) {
       

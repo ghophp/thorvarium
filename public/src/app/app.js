@@ -17,8 +17,6 @@ angular.module( 'thorvarium', [
 
 .controller( 'AppCtrl', function AppCtrl ( $rootScope, $scope, $location ) {
   
-  $scope.ws = null;
-
   $scope.go = function ( path ) {
     $location.path( path );
   };
@@ -48,6 +46,8 @@ angular.module( 'thorvarium', [
   if(angular.isDefined($.cookie('user'))) {
     $rootScope.user = $.parseJSON($.cookie('user'));
   }
+
+  $rootScope.ws = null;
 
 })
 

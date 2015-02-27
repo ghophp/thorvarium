@@ -10,7 +10,7 @@ import org.scalatest.mock.MockitoSugar
 import session.SessionSpec
 import session.SessionSpec.SessionTestComponentImpl
 
-object UsersSpec extends PlaySpecification with Results with MockitoSugar with WithTestDatabase {
+class UsersSpec extends PlaySpecification with Results with MockitoSugar with WithTestDatabase {
 
   def beforeAll() = {
     new UsersTestController().sessionManager.redis.del(SessionSpec.testUUID)

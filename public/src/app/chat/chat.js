@@ -22,28 +22,28 @@ angular.module( 'thorvarium.chat', [
   $scope.messages = [];
 
   $scope.send = function() {
-    if ($scope.message && $scope.ws) {
-      $scope.ws.send(JSON.stringify({type: 'message', content: $scope.message}));
+    if ($scope.message && $rootScope.ws) {
+      $rootScope.ws.send(JSON.stringify({type: 'message', content: $scope.message}));
       $scope.message = '';
     }
   };
 
   $scope.invite = function(user) {
     if(confirm('You want to invite '+user.nickname+' to play?')) {
-      $scope.ws.send(JSON.stringify({type: 'invitation', to: user.id}));
+      $rootScope.ws.send(JSON.stringify({type: 'invitation', to: user.id}));
     }
   };
 
   $scope.accept = function(invitation) {
     if(confirm('You want to start the game with '+invitation.from.nickname+'?')) {
-      $scope.ws.send(JSON.stringify({type: 'accept', from: invitation.from.id}));
+      $rootScope.ws.send(JSON.stringify({type: 'accept', from: invitation.from.id}));
     }
   };
 
   if (angular.isDefined($.cookie('auth'))) {
 
-    $scope.ws = new WebSocket(wsUrl);
-    $scope.ws.onmessage = function(message) {
+    $rootScope.ws = $rootScope.ws ? $rootScope.ws : new WebSocket(wsUrl);
+    $rootScope.ws.onmessage = function(message) {
       
       message = $.parseJSON(message.data);
       console.log('Received message: ', message);
@@ -103,14 +103,16 @@ angular.module( 'thorvarium.chat', [
                 return typeof _.find(message.players, function(i) { return i.id == x.id; }) !== 'undefined';
               });
 
-              Game.create(message.id, 
-                players,
-                message.persons,
-                message.weapons,
-                new Date(message.now));
-              
-              $scope.go('/game');
+              $scope.$apply(function(){
+                
+                Game.create(message.id, 
+                  players,
+                  message.persons,
+                  message.weapons,
+                  new Date(message.now));
 
+                $scope.go('/game');
+              });
             }            
 
             break;

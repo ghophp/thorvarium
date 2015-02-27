@@ -71,7 +71,7 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "type" -> "members",
         "value" -> members)
 
-    case other => log.error("Unhandled :: " + other)
+    case other => log.error("== Unhandled :: " + other + "==")
   }
 
   def endGame() = {

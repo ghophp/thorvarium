@@ -10,7 +10,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
   val system = ActorSystem("GameActor")
 
-  var players = Map.empty[ActorRef, Player]
+  var players = Map.empty[Player, ActorRef]
   var board : ActorRef = BoardActor()
 
   var stepTimer : Cancellable = null
@@ -18,35 +18,43 @@ class GameActor(id: String) extends Actor with ActorLogging {
   def receive = LoggingReceive {
 
     case subscribe:SubscribeGame =>
-      players += (subscribe.actor -> new Player(subscribe.user, Map.empty))
+
+      log.info("== Player enter :: "+ subscribe.user.nickname +" ==")
+
+      players += (new Player(subscribe.user, Map.empty) -> subscribe.actor)
       context watch subscribe.actor
 
       if (players.size >= 2) {
 
-        players.map { _._1 ! StartGame(id,
-          players.map(_._2).toSet,
+        val now = DateTime.now().getMillis
+        log.info("== Start choose timer at :: "+ now +" ==")
+
+        players.map { _._2 ! StartGame(id,
+          players.map(_._1).toSet,
           Person.list,
           Weapon.list,
-          DateTime.now().getMillis ) }
+          now) }
 
         chooseTimer()
       }
 
     case NothingSelected if sender == self =>
-      players.map { _._1 ! NothingSelected }
+      players.map { _._2 ! NothingSelected }
       endGame()
 
     case Terminated(user) =>
-      players.find( u => u._1 == user ) match {
+      players.find( u => u._2 == user ) match {
         case Some(x) =>
 
-          players -= x._1
-          context unwatch x._1
+          log.info("== Game has ended :: "+ id +" ==")
 
-          players.map { _._1 ! Won }
+          players -= x._1
+          context unwatch x._2
+
+          players.map { _._2 ! Won }
           endGame()
 
-        case None => log.error("Terminated actor not found")
+        case None => log.error("== Terminated actor not found ==")
       }
   }
 
@@ -69,7 +77,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
   }
 }
 
-case class SubscribeGame(actor: ActorRef, user: User)
+case class SubscribeGame(user: User, actor: ActorRef)
 case class EndGame(id : String)
 case class StartGame(id : String,
                      players : Set[Player],
