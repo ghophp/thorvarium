@@ -27,6 +27,8 @@ case class Person(id: Option[Long] = None,
 
 object Person {
 
+  val WeaponSlots = Set[String]("weapon1", "weapon2")
+
   private val parser : RowParser[Person] = {
     get[Option[Long]]("id") ~
         get[String]("name") ~

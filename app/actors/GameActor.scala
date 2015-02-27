@@ -45,9 +45,6 @@ class GameActor(id: String) extends Actor with ActorLogging {
     case Terminated(user) =>
       players.find( u => u._2 == user ) match {
         case Some(x) =>
-
-          log.info("== Game has ended :: "+ id +" ==")
-
           players -= x._1
           context unwatch x._2
 
@@ -68,6 +65,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
   }
 
   def endGame() = {
+
+    log.info("== Game has ended :: "+ id +" ==")
+
     board ! EndGame(id)
     context stop self
   }
@@ -85,7 +85,10 @@ case class StartGame(id : String,
                      weapons: List[Weapon],
                      now: Long)
 
-object NothingSelected
+case class PlayerSet(user: Long,
+                     persons: Map[String, Long],
+                     weapons: Map[String, Map[String, Long]])
 
+object NothingSelected
 object Won
 object Lose

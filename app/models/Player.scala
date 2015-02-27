@@ -11,5 +11,5 @@ case class Player(user: User, persons : Map[String, Person]) {
 }
 
 object Player {
-
+  val PersonSlots = Set[String]("person1", "person2", "person3")
 }
