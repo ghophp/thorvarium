@@ -38,6 +38,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
         chooseTimer()
       }
 
+    case set:PlayerSet =>
+
+
     case NothingSelected if sender == self =>
       players.map { _._2 ! NothingSelected }
       endGame()

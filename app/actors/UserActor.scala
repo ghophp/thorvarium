@@ -30,6 +30,8 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
           board ! Invitation(user, (command \ "to").as[Long])
         case "accept" =>
           board ! Accept(user, (command \ "from").as[Long])
+        case "options" if game != null =>
+          game ! toPlayerSet(command)
         case other => log.error("Unhandled :: " + other)
       }
 
@@ -72,6 +74,19 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "value" -> members)
 
     case other => log.error("== Unhandled :: " + other + "==")
+  }
+
+  def toPlayerSet(command : JsValue) : PlayerSet = {
+
+    val person1 = (command \ "persons" \ "person1").asOpt[Long]
+    val person2 = (command \ "persons" \ "person2").asOpt[Long]
+    val person3 = (command \ "persons" \ "person2").asOpt[Long]
+
+    if (person1.isDefined && person2.isDefined && person3.isDefined) {
+
+    }
+
+    PlayerSet(user.id.get, Map.empty, Map.empty)
   }
 
   def endGame() = {

@@ -96,7 +96,9 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       gameActorRef ! PlayerSet(SessionSpec.testUser.id.get, personsTest, weaponsTest)
       gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, personsTest, weaponsTest)
 
-      gameActor.stepTimer mustEqual null
+      if (gameActor.stepTimer != null) {
+        gameActor.stepTimer.isCancelled must be true
+      }
     }
   }
 
