@@ -17,24 +17,78 @@ angular.module( 'thorvarium.game', [
 
 .controller( 'GameCtrl', function GameController( $rootScope, $scope, Game ) {
 
-  console.log($rootScope.ws, Game.id);
+  $scope.endGame = function(message) {
+    Game.destroy();
+    $rootScope.ws = null;
+    $scope.go('/chat');
+    alert(message);
+  };
+
+  $scope.send = function() {
+    
+    var slots = _.filter($scope.slots, function(slot) {
+      return slot.id > 0 && slot.weapon1 > 0 && slot.weapon2 > 0;
+    });
+
+    if (slots.length >= 3) {
+      $rootScope.ws.send(JSON.stringify({
+        "type": "options", 
+        "persons": angular.copy($scope.slots)
+      }));
+    }
+  };
+
+  $scope.slots = {
+    "person1": {
+      "id": 0,
+      "name": "Person 1",
+      "weapon1": 0,
+      "weapon2": 0
+    },
+    "person2": {
+      "id": 0,
+      "name": "Person 2",
+      "weapon1": 0,
+      "weapon2": 0
+    },
+    "person3": {
+      "id": 0,
+      "name": "Person 3",
+      "weapon1": 0,
+      "weapon2": 0
+    }
+  };
+
   if ($rootScope.ws && Game.id) {
+
+    $scope.persons = angular.copy(Game.persons);
+    $scope.weapons = angular.copy(Game.weapons);
 
     $scope.ws.onmessage = function(message) {
       
       message = $.parseJSON(message.data);
-      console.log('Received message: ', message);
+      console.log('Received game message: ', message);
 
       if (angular.isDefined(message.type)) {
 
         switch(message.type) {
+          case 'game_ready':
+            console.log('game is ready');
+          break;
+          case 'nothing_selected':
+            $scope.$apply(function(){
+              $scope.endGame('Seems that your adversary run away!');
+            });
+          break;
           case 'won':
-            Game.destroy();
-            $scope.go('/chat');        
+            $scope.$apply(function(){
+              $scope.endGame('Congratulations! You won the game...');
+            });
           break;
           case 'lose':
-            Game.destroy();
-            $scope.go('/chat');
+            $scope.$apply(function(){
+              $scope.endGame('Ohh! You lose the game...');
+            });
           break;
         }
       }

@@ -5,6 +5,7 @@ angular.module( 'thorvarium', [
   'thorvarium.login',
   'thorvarium.chat',
   'thorvarium.game',
+  'ui.bootstrap',
   'ui.router'
 ])
 

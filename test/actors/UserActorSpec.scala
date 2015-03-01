@@ -3,7 +3,6 @@ package actors
 import integration.WithTestDatabase
 import org.specs2.mutable.SpecificationLike
 import org.specs2.specification.Scope
-import play.api.test.WithApplication
 import akka.actor.Props
 import akka.testkit.TestActorRef
 import akka.testkit.TestProbe
@@ -62,7 +61,7 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
 
     "relay player set to the game" in new GameProbe {
 
-      val testPlayerSet = SessionSpec.testPlayerSet ++ Json.obj("type" -> "options")
+      val testPlayerSet = Json.parse("{\"type\":\"options\",\"persons\":{\"person1\":{\"id\":2,\"name\":\"Person 1\",\"weapon1\":3,\"weapon2\":2},\"person2\":{\"id\":1,\"name\":\"Person 2\",\"weapon1\":2,\"weapon2\":2},\"person3\":{\"id\":2,\"name\":\"Person 3\",\"weapon1\":2,\"weapon2\":2}}}")
       userActor.game = gameProbe.ref
       userActor.receive(testPlayerSet)
 

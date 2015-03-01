@@ -43,7 +43,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
       players.find( _._1.user.id.get == set.user ) match {
         case Some(p) =>
           p._1.persons = set.persons
-          if (players.count( _._1.persons.size >= 2 ) >= 2) {
+          if (players.count( _._1.persons.size >= 3 ) >= 2) {
 
             stepTimer.cancel()
 

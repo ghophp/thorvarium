@@ -59,22 +59,22 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "weapons" -> s.weapons.map { _.toJson },
         "now" -> s.now)
 
-    case r:GameReady =>
+    case r:GameReady if sender == game =>
       out ! Json.obj(
         "type" -> "game_ready",
         "players" -> r.players.map(u => u.toJson),
         "now" -> r.now)
 
     case NothingSelected if sender == game =>
-      endGame()
+      game = null
       out ! Json.obj("type" -> "nothing_selected")
 
     case Won =>
-      endGame()
+      game = null
       out ! Json.obj("type" -> "won")
 
     case Lose =>
-      endGame()
+      game = null
       out ! Json.obj("type" -> "lose")
 
     case BoardMembers(members) if sender == board =>
@@ -133,22 +133,17 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
           val w1 = Weapon.findBy( (js._2 \ Person.WeaponSlot1).asOpt[Long].getOrElse(0))
           val w2 = Weapon.findBy( (js._2 \ Person.WeaponSlot2).asOpt[Long].getOrElse(0))
           if (w1.size > 0 && w2.size > 0) {
-            (js._2 \ "id").as[Long] -> Map[String, Weapon](Person.WeaponSlot1 -> w1(0), Person.WeaponSlot2 -> w2(0))
-          } else (js._2 \ "id").as[Long] -> Map.empty[String, Weapon]
+            js._1 -> Map[String, Weapon](Person.WeaponSlot1 -> w1(0), Person.WeaponSlot2 -> w2(0))
+          } else js._1 -> Map.empty[String, Weapon]
         }.toMap
 
         if (weapons.count( w => w._2.size >= 2 ) >= 3) {
-          return persons.map { p => p._2.weapons = weapons(p._2.id.get); p }
+          return persons.map { p => p._2.weapons = weapons(p._1); p }
         }
       }
     }
 
     Map.empty
-  }
-
-  def endGame() = {
-    game = null
-    board ! Subscribe(user)
   }
 }
 

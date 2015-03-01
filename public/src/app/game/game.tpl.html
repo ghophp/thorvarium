@@ -1,29 +1,53 @@
 <div class="row">
-	<div class="col-xs-8 choose">
-		
-		<div class="person-1 person">
-			<div class="btn-group">
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Left'">Left</label>
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Middle'">Middle</label>
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Right'">Right</label>
+	<div class="col-xs-12 choose">
+
+		<div class="row slot" ng-repeat="slot in slots">
+
+			<div class="col-xs-2 col-xs-offset-3">
+				<h2>{{ slot.name }}</h2>
 			</div>
-		</div>
-		
-		<div class="person-2 person">
-			<div class="btn-group">
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Left'">Left</label>
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Middle'">Middle</label>
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Right'">Right</label>
+			<div class="col-xs-3 person">
+				<div class="btn-group">
+					<label class="btn btn-primary" 
+						ng-model="slot.id" 
+						ng-repeat="person in persons" 
+						btn-radio="person.id">{{ person.name }}</label>
+				</div>
 			</div>
-		</div>
-		
-		<div class="person-3 person">
-			<div class="btn-group">
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Left'">Left</label>
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Middle'">Middle</label>
-				<label class="btn btn-primary" ng-model="radioModel" btn-radio="'Right'">Right</label>
+
+			<div class="row">
+
+				<div class="col-xs-2 col-xs-offset-1">
+					<h2>Weapon 1</h2>
+				</div>
+				<div class="col-xs-3 weapon">
+					<div class="btn-group">
+						<label class="btn btn-primary" 
+							ng-model="slot.weapon1" 
+							ng-repeat="weapon in weapons" 
+							btn-radio="weapon.id">{{ weapon.name }}</label>
+					</div>
+				</div>
+
 			</div>
+			
+			<div class="row">
+				<div class="col-xs-2 col-xs-offset-1">
+					<h2>Weapon 2</h2>
+				</div>
+				<div class="col-xs-3 weapon">
+					<div class="btn-group">
+						<label class="btn btn-primary" 
+							ng-model="slot.weapon2" 
+							ng-repeat="weapon in weapons" 
+							btn-radio="weapon.id">{{ weapon.name }}</label>
+					</div>
+				</div>
+			</div>
+
 		</div>
+
+		<button class="btn btn-default" type="button" ng-click="send()">Ready!</button>
 
 	</div>
 </div>
