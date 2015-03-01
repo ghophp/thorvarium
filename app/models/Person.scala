@@ -12,7 +12,7 @@ case class Person(id: Option[Long] = None,
                   speed: Int,
                   size: Int,
                   distance: Int,
-                  weapons : Map[String, Weapon]) {
+                  var weapons : Map[String, Weapon] = Map.empty) {
 
   def toJson = {
     Json.obj(
@@ -21,13 +21,17 @@ case class Person(id: Option[Long] = None,
       "life" -> life,
       "speed" -> speed,
       "size" -> size,
-      "distance" -> distance)
+      "distance" -> distance,
+      "weapons" -> weapons.map { _._2.toJson })
   }
 }
 
 object Person {
 
-  val WeaponSlots = Set[String]("weapon1", "weapon2")
+  val WeaponSlot1 = "weapon1"
+  val WeaponSlot2 = "weapon2"
+
+  val WeaponSlots = Set[String](WeaponSlot1, WeaponSlot2)
 
   private val parser : RowParser[Person] = {
     get[Option[Long]]("id") ~

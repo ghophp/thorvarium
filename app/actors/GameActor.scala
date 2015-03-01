@@ -40,6 +40,20 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
     case set:PlayerSet =>
 
+      players.find( _._1.user.id.get == set.user ) match {
+        case Some(p) =>
+          p._1.persons = set.persons
+          if (players.count( _._1.persons.size >= 2 ) >= 2) {
+
+            stepTimer.cancel()
+
+            val now = DateTime.now().getMillis
+            log.info("== Game ready at :: "+ now +" ==")
+
+            players.map { _._2 ! GameReady(players.map(_._1).toSet, now) }
+          }
+        case None => log.info("== PlayerSet not find :: "+ set.user +" ==")
+      }
 
     case NothingSelected if sender == self =>
       players.map { _._2 ! NothingSelected }
@@ -88,9 +102,8 @@ case class StartGame(id : String,
                      weapons: List[Weapon],
                      now: Long)
 
-case class PlayerSet(user: Long,
-                     persons: Map[String, Long],
-                     weapons: Map[String, Map[String, Long]])
+case class PlayerSet(user: Long, persons: Map[String, Person])
+case class GameReady(players: Set[Player], now: Long)
 
 object NothingSelected
 object Won

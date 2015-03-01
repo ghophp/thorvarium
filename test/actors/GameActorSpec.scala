@@ -32,19 +32,6 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
     val gameActor = gameActorRef.underlyingActor
   }
 
-  trait PlayGameProbe extends GameProbe {
-
-    val personsTest = Map[String, Long](
-      "person1" -> 1,
-      "person2" -> 2,
-      "person3" -> 3)
-
-    val weaponsTest = Map[String, Map[String, Long]](
-      "person1" -> Map("weapon1" -> 1, "weapon2" -> 2),
-      "person2" -> Map("weapon1" -> 1, "weapon2" -> 2),
-      "person3" -> Map("weapon1" -> 1, "weapon2" -> 2))
-  }
-
   "GameActor" should {
 
     "should inform users when game get two players" in new GameProbe {
@@ -84,7 +71,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       probe2.expectMsg(Duration.create(50, TimeUnit.SECONDS), NothingSelected)
     }
 
-    "if both selected, stop the timer and proceed to game loop" in new PlayGameProbe {
+    "if both selected, stop the timer and proceed to game loop" in new GameProbe {
 
       assert(gameActor.players.size == 0)
 
@@ -93,11 +80,13 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
       Thread.sleep(3000)
 
-      gameActorRef ! PlayerSet(SessionSpec.testUser.id.get, personsTest, weaponsTest)
-      gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, personsTest, weaponsTest)
+      val persons = userActor.toPersons(SessionSpec.testPlayerSet)
+
+      gameActorRef ! PlayerSet(SessionSpec.testUser.id.get, persons)
+      gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, persons)
 
       if (gameActor.stepTimer != null) {
-        gameActor.stepTimer.isCancelled must be true
+        gameActor.stepTimer.isCancelled must beTrue
       }
     }
   }

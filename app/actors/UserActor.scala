@@ -5,8 +5,8 @@ import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import akka.actor.ActorRef
 import akka.actor.Props
-import models.User
-import play.api.libs.json.{JsValue, Json}
+import models.{Weapon, Person, Player, User}
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 import scala.xml.Utility
 
@@ -31,7 +31,10 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         case "accept" =>
           board ! Accept(user, (command \ "from").as[Long])
         case "options" if game != null =>
-          game ! toPlayerSet(command)
+          val persons = toPersons(command)
+          if (persons.size >= 3) {
+            game ! PlayerSet(user.id.get, persons)
+          }
         case other => log.error("Unhandled :: " + other)
       }
 
@@ -56,6 +59,12 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "weapons" -> s.weapons.map { _.toJson },
         "now" -> s.now)
 
+    case r:GameReady =>
+      out ! Json.obj(
+        "type" -> "game_ready",
+        "players" -> r.players.map(u => u.toJson),
+        "now" -> r.now)
+
     case NothingSelected if sender == game =>
       endGame()
       out ! Json.obj("type" -> "nothing_selected")
@@ -76,17 +85,65 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
     case other => log.error("== Unhandled :: " + other + "==")
   }
 
-  def toPlayerSet(command : JsValue) : PlayerSet = {
+  /**
+   * Sample user data
+   * {
+   *  "persons": {
+   *    "person1": {
+   *      "id": 1,
+   *      "weapon1": 1,
+   *      "weapon2": 2
+   *    },
+   *    "person2": {
+   *      "id": 1,
+   *      "weapon1": 1,
+   *      "weapon2": 2
+   *    },
+   *    "person3": {
+   *      "id": 1,
+   *      "weapon1": 1,
+   *      "weapon2": 2
+   *    }
+   *  }
+   * }
+   * @param command user json
+   * @return mapped player options
+   */
+  def toPersons(command : JsValue) : Map[String, Person] = {
 
-    val person1 = (command \ "persons" \ "person1").asOpt[Long]
-    val person2 = (command \ "persons" \ "person2").asOpt[Long]
-    val person3 = (command \ "persons" \ "person2").asOpt[Long]
-
-    if (person1.isDefined && person2.isDefined && person3.isDefined) {
-
+    val personsJs = (command \ "persons").asOpt[JsObject] match {
+      case Some(j) => j.fieldSet
+        .filter( p => Player.PersonSlots.contains(p._1) )
+        .filter( p => p._2.asOpt[JsObject].getOrElse(Json.obj()).fieldSet.count( w => Person.WeaponSlots.contains(w._1) ) >= 2 )
+      case None => Set.empty
     }
 
-    PlayerSet(user.id.get, Map.empty, Map.empty)
+    if (personsJs.size >= 3) {
+
+      val persons = personsJs.map { js =>
+        val p = Person.findBy( (js._2 \ "id").asOpt[Long].getOrElse(0))
+        if (p.size > 0) {
+          js._1 -> p(0)
+        } else js._1 -> null
+      }.filter( p => p._2 != null ).toMap
+
+      if (persons.size >= 3) {
+
+        val weapons = personsJs.map { js =>
+          val w1 = Weapon.findBy( (js._2 \ Person.WeaponSlot1).asOpt[Long].getOrElse(0))
+          val w2 = Weapon.findBy( (js._2 \ Person.WeaponSlot2).asOpt[Long].getOrElse(0))
+          if (w1.size > 0 && w2.size > 0) {
+            (js._2 \ "id").as[Long] -> Map[String, Weapon](Person.WeaponSlot1 -> w1(0), Person.WeaponSlot2 -> w2(0))
+          } else (js._2 \ "id").as[Long] -> Map.empty[String, Weapon]
+        }.toMap
+
+        if (weapons.count( w => w._2.size >= 2 ) >= 3) {
+          return persons.map { p => p._2.weapons = weapons(p._2.id.get); p }
+        }
+      }
+    }
+
+    Map.empty
   }
 
   def endGame() = {
