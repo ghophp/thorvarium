@@ -1,8 +1,9 @@
 package actors
 
+import game.GameLoop
 import game.models.GamingSet
 import integration.WithTestDatabase
-import models.Person
+import models.{Player, Person}
 import org.specs2.mutable.SpecificationLike
 import org.specs2.specification.Scope
 import akka.actor.Props

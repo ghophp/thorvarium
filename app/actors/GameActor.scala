@@ -59,8 +59,8 @@ class GameActor(id: String) extends Actor with ActorLogging {
             players.map { _._2 ! GameReady(playerList.toSet, now) }
 
             gameLoop = new GameLoop(
-              new GamingPlayer(playerList(0), GamingPlayer.Player1, null),
-              new GamingPlayer(playerList(1), GamingPlayer.Player2, null))
+              new GamingPlayer(playerList(0), GamingPlayer.Player1),
+              new GamingPlayer(playerList(1), GamingPlayer.Player2))
 
             timer(TurnEnd)
           }

@@ -54,7 +54,10 @@ object SessionSpec extends SessionSpec {
     "person3" -> Json.obj("id" -> 1, "weapon1" -> 1, "weapon2" -> 2)))
 
   val testTurnSet = Json.obj("persons" -> Json.obj(
-    "person1" -> Json.obj("x" -> 1, "y" -> 1, "weapon1" -> Json.obj("x" -> 1, "y" -> 1), "weapon2" -> Json.obj("x" -> 1, "y" -> 1)),
-    "person2" -> Json.obj("x" -> 1, "x" -> 1, "weapon1" -> Json.obj("x" -> 1, "y" -> 1), "weapon2" -> Json.obj("x" -> 1, "y" -> 1)),
-    "person3" -> Json.obj("x" -> 1, "x" -> 1, "weapon1" -> Json.obj("x" -> 1, "y" -> 1), "weapon2" -> Json.obj("x" -> 1, "y" -> 1))))
+    "person1" -> Json.obj("x" -> 400, "y" -> 400,
+      "weapon1" -> Json.obj("x" -> 1, "y" -> 1), "weapon2" -> Json.obj("x" -> 1, "y" -> 1)),
+    "person2" -> Json.obj("x" -> 1, "x" -> 1,
+      "weapon1" -> Json.obj("x" -> 1, "y" -> 1), "weapon2" -> Json.obj("x" -> 1, "y" -> 1)),
+    "person3" -> Json.obj("x" -> 1, "x" -> 1,
+      "weapon1" -> Json.obj("x" -> 1, "y" -> 1), "weapon2" -> Json.obj("x" -> 1, "y" -> 1))))
 }

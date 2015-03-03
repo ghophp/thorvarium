@@ -1,5 +1,5 @@
 package game.models
 
-class GamingMove(val x: Double, val y: Double) {
+class GamingMove(var x: Double, var y: Double) {
 
  }

@@ -1,6 +1,6 @@
 package game
 
-import game.models.GamingPlayer
+import game.models.{GamingMove, GamingPlayer}
 
 class GameLoop(var player1 : GamingPlayer, var player2: GamingPlayer) {
 
@@ -13,14 +13,10 @@ class GameLoop(var player1 : GamingPlayer, var player2: GamingPlayer) {
   }
 
   def update(elapsed : Long) = {
-    if (player1.input != null || player2.input != null) {
 
-      if (player1.input != null) {
-        applyMovement(player1, elapsed)
-      }
-
-      if (player2.input != null) {
-        applyMovement(player2, elapsed)
+    Set(player1, player2).map { p =>
+      if (p.input != null) {
+        applyMovement(p, elapsed)
       }
     }
 
@@ -34,14 +30,14 @@ class GameLoop(var player1 : GamingPlayer, var player2: GamingPlayer) {
 
       p.input.movements.map { m =>
         val person = p.player.persons(m._1)
-        if (person.x != m._2.x || person.y != m._2.y) {
+        if (person.x.toInt != m._2.x.toInt ||
+          person.y.toInt != m._2.y.toInt) {
 
           val angle = Math.atan2(m._2.x - person.x, m._2.y - person.y)
-          person.x += Math.sin(angle) * ((GameLoop.MaxSpeed / 100) * person.speed) * elapsed
-          person.y += Math.cos(angle) * ((GameLoop.MaxSpeed / 100) * person.speed) * elapsed
+          person.x += Math.sin(angle) * (((GameLoop.MaxSpeed / 100.0) * person.speed) / 1000)
+          person.y += Math.cos(angle) * (((GameLoop.MaxSpeed / 100.0) * person.speed) / 1000)
 
           steps += 1
-          println("== " + m._1 + " move to " + person.x + "," + person.y + " ==")
         }
       }
     }
@@ -55,5 +51,6 @@ object GameLoop {
   val sceneWidth = 500
   val sceneHeight = 500
 
-  val MaxSpeed = 2 // 2 pixels per second
+  val MaxSpeed = 2.0 // 2 pixels per second
+  val MaxDistance = 120.0
 }

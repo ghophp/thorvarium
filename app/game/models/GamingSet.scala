@@ -3,7 +3,7 @@ package game.models
 import models.{Person, Player}
 import play.api.libs.json.{JsObject, JsValue}
 
-class GamingSet(val movements : Map[String, GamingMove],
+class GamingSet(var movements : Map[String, GamingMove],
                 val weapons: Map[String, Map[String, GamingWeapon]]) {
 
 }
