@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor.{PoisonPill, Props}
 import akka.testkit.{TestActorRef, TestProbe}
 import integration.WithTestDatabase
+import models.Person
 import org.specs2.mutable.SpecificationLike
 import org.specs2.specification.Scope
 import session.SessionSpec
@@ -71,7 +72,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       probe2.expectMsg(Duration.create(50, TimeUnit.SECONDS), NothingSelected)
     }
 
-    "if both selected, stop the timer and proceed to game loop" in new GameProbe {
+    "if both selected, proceed to game loop" in new GameProbe {
 
       assert(gameActor.players.size == 0)
 
@@ -80,14 +81,12 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
       Thread.sleep(3000)
 
-      val persons = userActor.toPersons(SessionSpec.testPlayerSet)
+      val persons = Person.toPersons(SessionSpec.testPlayerSet)
 
       gameActorRef ! PlayerSet(SessionSpec.testUser.id.get, persons)
       gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, persons)
 
-      if (gameActor.stepTimer != null) {
-        gameActor.stepTimer.isCancelled must beTrue
-      }
+      assert(gameActor.gameLoop != null)
     }
   }
 

@@ -4,7 +4,7 @@ import anorm._
 import anorm.SqlParser._
 import play.api.db.DB
 import play.api.Play.current
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, JsValue, Json}
 
 case class Person(id: Option[Long] = None,
                   name: String,
@@ -12,6 +12,8 @@ case class Person(id: Option[Long] = None,
                   speed: Int,
                   size: Int,
                   distance: Int,
+                  var x: Double = 0,
+                  var y: Double = 0,
                   var weapons : Map[String, Weapon] = Map.empty) {
 
   def toJson = {
@@ -22,6 +24,8 @@ case class Person(id: Option[Long] = None,
       "speed" -> speed,
       "size" -> size,
       "distance" -> distance,
+      "x" -> x,
+      "y" -> y,
       "weapons" -> weapons.map { _._2.toJson })
   }
 }
@@ -41,7 +45,7 @@ object Person {
         get[Int]("size") ~
         get[Int]("distance") map {
       case id ~ name ~ life ~ speed ~ size ~ distance =>
-        Person(id, name, life, speed, size, distance, Map.empty)
+        Person(id, name, life, speed, size, distance, 0, 0, Map.empty)
     }
   }
 
@@ -57,5 +61,66 @@ object Person {
           .on('id -> id)
           .as(parser *)
     }
+  }
+
+  /**
+   * Sample user data
+   * {
+   *  "persons": {
+   *    "person1": {
+   *      "id": 1,
+   *      "weapon1": 1,
+   *      "weapon2": 2
+   *    },
+   *    "person2": {
+   *      "id": 1,
+   *      "weapon1": 1,
+   *      "weapon2": 2
+   *    },
+   *    "person3": {
+   *      "id": 1,
+   *      "weapon1": 1,
+   *      "weapon2": 2
+   *    }
+   *  }
+   * }
+   * @param command user json
+   * @return mapped player options
+   */
+  def toPersons(command : JsValue) : Map[String, Person] = {
+
+    val personsJs = (command \ "persons").asOpt[JsObject] match {
+      case Some(j) => j.fieldSet
+        .filter( p => Player.PersonSlots.contains(p._1) )
+        .filter( p => p._2.asOpt[JsObject].getOrElse(Json.obj()).fieldSet.count( w => Person.WeaponSlots.contains(w._1) ) >= 2 )
+      case None => Set.empty
+    }
+
+    if (personsJs.size >= 3) {
+
+      val persons = personsJs.map { js =>
+        val p = Person.findBy( (js._2 \ "id").asOpt[Long].getOrElse(0))
+        if (p.size > 0) {
+          js._1 -> p(0)
+        } else js._1 -> null
+      }.filter( p => p._2 != null ).toMap
+
+      if (persons.size >= 3) {
+
+        val weapons = personsJs.map { js =>
+          val w1 = Weapon.findBy( (js._2 \ Person.WeaponSlot1).asOpt[Long].getOrElse(0))
+          val w2 = Weapon.findBy( (js._2 \ Person.WeaponSlot2).asOpt[Long].getOrElse(0))
+          if (w1.size > 0 && w2.size > 0) {
+            js._1 -> Map[String, Weapon](Person.WeaponSlot1 -> w1(0), Person.WeaponSlot2 -> w2(0))
+          } else js._1 -> Map.empty[String, Weapon]
+        }.toMap
+
+        if (weapons.count( w => w._2.size >= 2 ) >= 3) {
+          return persons.map { p => p._2.weapons = weapons(p._1); p }
+        }
+      }
+    }
+
+    Map.empty
   }
 }

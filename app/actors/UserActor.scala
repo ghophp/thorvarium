@@ -5,6 +5,7 @@ import akka.actor.ActorLogging
 import akka.event.LoggingReceive
 import akka.actor.ActorRef
 import akka.actor.Props
+import game.models.GamingSet
 import models.{Weapon, Person, Player, User}
 import play.api.libs.json.{JsObject, JsValue, Json}
 
@@ -31,9 +32,14 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         case "accept" =>
           board ! Accept(user, (command \ "from").as[Long])
         case "options" if game != null =>
-          val persons = toPersons(command)
+          val persons = Person.toPersons(command)
           if (persons.size >= 3) {
             game ! PlayerSet(user.id.get, persons)
+          }
+        case "input" if game != null =>
+          val input = GamingSet.toTurnSet(command)
+          if (input != null) {
+            game ! PlayerTurnSet(user.id.get, input)
           }
         case other => log.error("Unhandled :: " + other)
       }
@@ -83,67 +89,6 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "value" -> members)
 
     case other => log.error("== Unhandled :: " + other + "==")
-  }
-
-  /**
-   * Sample user data
-   * {
-   *  "persons": {
-   *    "person1": {
-   *      "id": 1,
-   *      "weapon1": 1,
-   *      "weapon2": 2
-   *    },
-   *    "person2": {
-   *      "id": 1,
-   *      "weapon1": 1,
-   *      "weapon2": 2
-   *    },
-   *    "person3": {
-   *      "id": 1,
-   *      "weapon1": 1,
-   *      "weapon2": 2
-   *    }
-   *  }
-   * }
-   * @param command user json
-   * @return mapped player options
-   */
-  def toPersons(command : JsValue) : Map[String, Person] = {
-
-    val personsJs = (command \ "persons").asOpt[JsObject] match {
-      case Some(j) => j.fieldSet
-        .filter( p => Player.PersonSlots.contains(p._1) )
-        .filter( p => p._2.asOpt[JsObject].getOrElse(Json.obj()).fieldSet.count( w => Person.WeaponSlots.contains(w._1) ) >= 2 )
-      case None => Set.empty
-    }
-
-    if (personsJs.size >= 3) {
-
-      val persons = personsJs.map { js =>
-        val p = Person.findBy( (js._2 \ "id").asOpt[Long].getOrElse(0))
-        if (p.size > 0) {
-          js._1 -> p(0)
-        } else js._1 -> null
-      }.filter( p => p._2 != null ).toMap
-
-      if (persons.size >= 3) {
-
-        val weapons = personsJs.map { js =>
-          val w1 = Weapon.findBy( (js._2 \ Person.WeaponSlot1).asOpt[Long].getOrElse(0))
-          val w2 = Weapon.findBy( (js._2 \ Person.WeaponSlot2).asOpt[Long].getOrElse(0))
-          if (w1.size > 0 && w2.size > 0) {
-            js._1 -> Map[String, Weapon](Person.WeaponSlot1 -> w1(0), Person.WeaponSlot2 -> w2(0))
-          } else js._1 -> Map.empty[String, Weapon]
-        }.toMap
-
-        if (weapons.count( w => w._2.size >= 2 ) >= 3) {
-          return persons.map { p => p._2.weapons = weapons(p._1); p }
-        }
-      }
-    }
-
-    Map.empty
   }
 }
 

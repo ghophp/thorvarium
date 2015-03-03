@@ -1,6 +1,8 @@
 package actors
 
+import game.models.GamingSet
 import integration.WithTestDatabase
+import models.Person
 import org.specs2.mutable.SpecificationLike
 import org.specs2.specification.Scope
 import akka.actor.Props
@@ -51,8 +53,8 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
       boardProbe.expectMsg(Accept(SessionSpec.testUser, SessionSpec.testUser2.id.get))
     }
 
-    "toPlayerSet must translate json to objects" in new GameProbe {
-      val playerSet = userActor.toPersons(SessionSpec.testPlayerSet)
+    "toOptions must translate json to player options to start the game" in new GameProbe {
+      val playerSet = Person.toPersons(SessionSpec.testPlayerSet)
       assert(
         playerSet.contains("person1") &&
           playerSet.contains("person2") &&
@@ -65,8 +67,29 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
       userActor.game = gameProbe.ref
       userActor.receive(testPlayerSet)
 
-      val playerSet = userActor.toPersons(testPlayerSet)
+      val playerSet = Person.toPersons(testPlayerSet)
       gameProbe.expectMsg(PlayerSet(SessionSpec.testUser.id.get, playerSet))
+    }
+
+    "toTurnSet must translate json to player movements at the game turn" in new GameProbe {
+      val turnSet = GamingSet.toTurnSet(SessionSpec.testTurnSet)
+      assert(
+        turnSet.movements.contains("person1") &&
+          turnSet.movements.contains("person2") &&
+          turnSet.movements.contains("person3") &&
+        turnSet.weapons.contains("person1") &&
+          turnSet.weapons.contains("person2") &&
+          turnSet.weapons.contains("person3"))
+    }
+
+    "relay turn set to the game" in new GameProbe {
+
+      val testTurnSet = Json.parse("{\"type\":\"input\",\"persons\":{\"person1\":{\"x\":0,\"y\":0}}}")
+      userActor.game = gameProbe.ref
+      userActor.receive(testTurnSet)
+
+      val turnSet = GamingSet.toTurnSet(testTurnSet)
+      gameProbe.expectMsgClass(classOf[PlayerTurnSet])
     }
   }
 
