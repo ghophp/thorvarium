@@ -634,6 +634,7 @@ module.exports = function ( grunt ) {
             scripts: jsFiles,
             styles: cssFiles,
             ws: grunt.config( 'general.ws' ),
+            assets: grunt.config( 'general.assets' ),
             version: grunt.config( 'pkg.version' )
           }
         });

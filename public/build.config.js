@@ -70,7 +70,8 @@ module.exports = {
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/jquery.cookie/jquery.cookie.js',
       'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/angular-md5/angular-md5.min.js'
+      'vendor/angular-md5/angular-md5.min.js',
+      'vendor/angular-timer/dist/angular-timer.min.js'
     ],
     maps: [
       'vendor/underscore/underscore-min.map',

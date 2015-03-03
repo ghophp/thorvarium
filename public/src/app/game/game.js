@@ -1,5 +1,6 @@
 angular.module( 'thorvarium.game', [
-  'ui.router'
+  'ui.router',
+  'timer'
 ])
 
 .config(function config( $stateProvider ) {
@@ -17,6 +18,9 @@ angular.module( 'thorvarium.game', [
 
 .controller( 'GameCtrl', function GameController( $rootScope, $scope, Game ) {
 
+  $scope.ready = true;
+  $scope.gaming = true;
+
   $scope.endGame = function(message) {
     Game.destroy();
     $rootScope.ws = null;
@@ -31,10 +35,16 @@ angular.module( 'thorvarium.game', [
     });
 
     if (slots.length >= 3) {
+      
       $rootScope.ws.send(JSON.stringify({
         "type": "options", 
         "persons": angular.copy($scope.slots)
       }));
+
+      $scope.ready = true;
+
+    } else {
+      alert('Please select your persons and weapons...');
     }
   };
 
@@ -59,6 +69,7 @@ angular.module( 'thorvarium.game', [
     }
   };
 
+  /*
   if ($rootScope.ws && Game.id) {
 
     $scope.persons = angular.copy(Game.persons);
@@ -73,7 +84,12 @@ angular.module( 'thorvarium.game', [
 
         switch(message.type) {
           case 'game_ready':
-            console.log('game is ready');
+            $scope.$apply(function(){
+              
+              $scope.gaming = true;
+              Game.start();
+
+            });
           break;
           case 'nothing_selected':
             $scope.$apply(function(){
@@ -97,24 +113,36 @@ angular.module( 'thorvarium.game', [
   } else {
     $scope.go('/chat');
   }
+  */
+
+  Game.start();
   
 })
 
-.service('Game', function() {
+.service('Game', function($window) {
 
   this.id = null;
   this.players = [];
   this.persons = [];
   this.weapons = [];
 
-  this.start = null;
+  this.now = null;
+  this.then = null;
 
-  this.create = function(id, players, persons, weapons, start) {
+  this.canvas = null;
+  this.context = null;
+
+  this.bgImage = null;
+  this.personsImages = [];
+
+  this.requestAnimationFrame = null;
+
+  this.create = function(id, players, persons, weapons, now) {
     this.id = id;
     this.players = players;
     this.persons = persons;
     this.weapons = weapons;
-    this.start = start;
+    this.now = now;
   };
 
   this.destroy = function() {
@@ -122,7 +150,89 @@ angular.module( 'thorvarium.game', [
     this.players = [];
     this.persons = [];
     this.weapons = [];
-    this.start = null;
+    this.now = null;
+    
+    this.canvas = null;
+    this.context = null;
+
+    this.bgImage = null;
+    this.personsImages = [];
+
+    this.keysDown = {};
+  };
+
+  this.start = function() {
+
+    var that = this;
+
+    this.canvas = document.createElement("canvas");
+    this.context = this.canvas.getContext("2d");
+    this.canvas.width = 512;
+    this.canvas.height = 480;
+
+    var bgImage = new Image();
+    bgImage.onload = function () {
+      that.bgImage = bgImage;
+    };
+    bgImage.src = assetsUrl + "/images/background.png";
+
+    _.each(this.persons, function(p){
+
+      var pImage = new Image();
+      pImage.onload = function () {
+        that.personsImages.push(pImage);
+      };
+      pImage.src = assetsUrl + "/images/person" + p.id + ".png";
+
+    });
+
+    this.requestAnimationFrame = $window.requestAnimationFrame || 
+      $window.webkitRequestAnimationFrame || 
+      $window.msRequestAnimationFrame || 
+      $window.mozRequestAnimationFrame;
+
+    // Let's play this game!
+    this.then = Date.now();
+    $window.Game = this;
+    
+    $($window).ready(function(){
+      $('.game-scenario').append(that.canvas);
+      that.main.call($window);
+    });
+  };
+
+  this.update = function (modifier) {
+    
+  };
+
+  this.render = function () {
+    if (this.bgImage) {
+      this.context.drawImage(this.bgImage, 0, 0);
+    }
+
+    if (this.personsImages.length >= 3) {
+      
+    }
+
+    if (this.heroImage) {
+      this.context.drawImage(this.heroImage, this.hero.x, this.hero.y);
+    }
+  };
+
+  this.main = function () {
+
+    var that = $window.Game;
+
+    that.now = Date.now();
+    var delta = that.now - that.then;
+
+    that.update(delta / 1000);
+    that.render();
+
+    that.then = that.now;
+
+    // Request to do this again ASAP
+    that.requestAnimationFrame.call($window, that.main);
   };
 
   return this;
