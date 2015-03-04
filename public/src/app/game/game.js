@@ -73,7 +73,7 @@ angular.module( 'thorvarium.game', [
 
         switch(message.type) {
           case 'game_ready':
-            console.log('game is ready');
+            
           break;
           case 'nothing_selected':
             $scope.$apply(function(){

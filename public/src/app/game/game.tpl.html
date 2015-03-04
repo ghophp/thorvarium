@@ -15,39 +15,47 @@
 				</div>
 			</div>
 
-			<div class="row">
+			<div class="col-xs-12">
+				<div class="row">
 
-				<div class="col-xs-2 col-xs-offset-1">
-					<h2>Weapon 1</h2>
-				</div>
-				<div class="col-xs-3 weapon">
-					<div class="btn-group">
-						<label class="btn btn-primary" 
-							ng-model="slot.weapon1" 
-							ng-repeat="weapon in weapons" 
-							btn-radio="weapon.id">{{ weapon.name }}</label>
+					<div class="col-xs-2 col-xs-offset-1">
+						<h2>Weapon 1</h2>
 					</div>
-				</div>
+					<div class="col-xs-3 weapon">
+						<div class="btn-group">
+							<label class="btn btn-primary" 
+								ng-model="slot.weapon1" 
+								ng-repeat="weapon in weapons" 
+								btn-radio="weapon.id">{{ weapon.name }}</label>
+						</div>
+					</div>
 
+				</div>
 			</div>
 			
-			<div class="row">
-				<div class="col-xs-2 col-xs-offset-1">
-					<h2>Weapon 2</h2>
-				</div>
-				<div class="col-xs-3 weapon">
-					<div class="btn-group">
-						<label class="btn btn-primary" 
-							ng-model="slot.weapon2" 
-							ng-repeat="weapon in weapons" 
-							btn-radio="weapon.id">{{ weapon.name }}</label>
+			<div class="col-xs-12">
+				<div class="row">
+					<div class="col-xs-2 col-xs-offset-1">
+						<h2>Weapon 2</h2>
+					</div>
+					<div class="col-xs-3 weapon">
+						<div class="btn-group">
+							<label class="btn btn-primary" 
+								ng-model="slot.weapon2" 
+								ng-repeat="weapon in weapons" 
+								btn-radio="weapon.id">{{ weapon.name }}</label>
+						</div>
 					</div>
 				</div>
 			</div>
 
 		</div>
 
-		<button class="btn btn-default" type="button" ng-click="send()">Ready!</button>
+		<div class="row">
+			<div class="col-xs-12 text-center">
+				<button class="btn btn-default" type="button" ng-click="send()">Ready!</button>
+			</div>
+		</div>
 
 	</div>
 </div>
