@@ -1,7 +1,7 @@
 <div class="row">
 
 	<div class="time-to-choose" ng-if="!ready || !gaming">
-		<label>Time to choose:</label><timer countdown="40" interval="1000">{{countdown}}</timer>
+		<label>Time to choose:</label> {{countdown}}
 	</div>
 
 	<div class="col-xs-12 choose" ng-if="!ready">
@@ -19,8 +19,7 @@
 			</div>
 
 			<div class="col-xs-12">
-				<div class="row">
-
+				
 				<div class="col-xs-6 weapon text-center">
 					<h3>Weapon 1</h3>
 					<div class="btn-group">
@@ -29,6 +28,7 @@
 							ng-repeat="weapon in weapons" 
 							btn-radio="weapon.id">{{ weapon.name }}</label>
 					</div>
+				</div>
 
 				<div class="col-xs-6 weapon text-center">
 					<h3>Weapon 2</h3>
@@ -39,6 +39,7 @@
 							btn-radio="weapon.id">{{ weapon.name }}</label>
 					</div>
 				</div>
+
 			</div>
 
 		</div>

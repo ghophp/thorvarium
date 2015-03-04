@@ -56,12 +56,11 @@ class GameActor(id: String) extends Actor with ActorLogging {
             log.info("== Game ready at :: "+ now +" ==")
 
             val playerList = players.map(_._1).toList
-            players.map { _._2 ! GameReady(playerList.toSet, now) }
-
             gameLoop = new GameLoop(
               new GamingPlayer(playerList(0), GamingPlayer.Player1),
               new GamingPlayer(playerList(1), GamingPlayer.Player2))
 
+            players.map { _._2 ! GameReady(playerList.toSet, now) }
             timer(TurnEnd)
           }
         case None => log.info("== PlayerSet not find :: "+ set.user +" ==")

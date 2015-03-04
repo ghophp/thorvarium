@@ -69,9 +69,7 @@ module.exports = {
       'vendor/placeholders/angular-placeholders-0.0.1-SNAPSHOT.min.js',
       'vendor/angular-ui-router/release/angular-ui-router.js',
       'vendor/jquery.cookie/jquery.cookie.js',
-      'vendor/angular-ui-utils/modules/route/route.js',
-      'vendor/angular-md5/angular-md5.min.js',
-      'vendor/angular-timer/dist/angular-timer.min.js'
+      'vendor/angular-md5/angular-md5.min.js'
     ],
     maps: [
       'vendor/underscore/underscore-min.map',

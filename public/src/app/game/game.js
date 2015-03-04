@@ -1,6 +1,5 @@
 angular.module( 'thorvarium.game', [
-  'ui.router',
-  'timer'
+  'ui.router'
 ])
 
 .config(function config( $stateProvider ) {
@@ -16,10 +15,32 @@ angular.module( 'thorvarium.game', [
   });
 })
 
-.controller( 'GameCtrl', function GameController( $rootScope, $scope, Game ) {
+.controller( 'GameCtrl', function GameController( $rootScope, $scope, $timeout, Game ) {
 
-  $scope.ready = true;
-  $scope.gaming = true;
+  $scope.ready = false;
+  $scope.gaming = false;
+  $scope.countdown = 40;
+
+  $scope.stepTimer = null;
+
+  $scope.startTimer = function() {
+    $scope.stepTimer = $timeout($scope.onTimeout, 1000);
+  };
+
+  $scope.onTimeout = function() {
+    if($scope.countdown ===  0) {
+        $timeout.cancel($scope.stepTimer);
+        return;
+    }
+
+    $scope.countdown--;
+    $scope.stepTimer = $timeout($scope.onTimeout, 1000);
+  };
+
+  $scope.stopTimer = function() {
+    $scope.countdown = 40;
+    $timeout.cancel($scope.stepTimer);
+  };
 
   $scope.endGame = function(message) {
     Game.destroy();
@@ -69,7 +90,6 @@ angular.module( 'thorvarium.game', [
     }
   };
 
-  /*
   if ($rootScope.ws && Game.id) {
 
     $scope.persons = angular.copy(Game.persons);
@@ -86,9 +106,10 @@ angular.module( 'thorvarium.game', [
           case 'game_ready':
             $scope.$apply(function(){
               
+              $scope.stopTimer();
               $scope.gaming = true;
-              Game.start();
 
+              Game.start();
             });
           break;
           case 'nothing_selected':
@@ -110,13 +131,13 @@ angular.module( 'thorvarium.game', [
       }
     };
 
+    $scope.startTimer();
+
   } else {
     $scope.go('/chat');
   }
-  */
 
-  Game.start();
-  
+  Game.start();  
 })
 
 .service('Game', function($window) {

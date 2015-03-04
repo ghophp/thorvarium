@@ -1,6 +1,6 @@
 package game
 
-import game.models.{GamingMove, GamingPlayer}
+import game.models.GamingPlayer
 
 class GameLoop(var player1 : GamingPlayer, var player2: GamingPlayer) {
 
