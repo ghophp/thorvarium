@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor._
 import akka.event.LoggingReceive
 import game.GameLoop
-import game.models.{GamingSet, GamingPlayer}
+import game.models.GamingSet
 import models.{Weapon, Person, Player, User}
 import org.joda.time.DateTime
 import scala.concurrent.duration._
@@ -26,7 +26,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
       log.info("== Player enter :: "+ subscribe.user.nickname +" ==")
 
-      players += (new Player(subscribe.user, Map.empty) -> subscribe.actor)
+      players += (new Player(subscribe.user, players.size + 1, Map.empty) -> subscribe.actor)
       context watch subscribe.actor
 
       if (players.size >= 2) {
@@ -56,9 +56,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
             log.info("== Game ready at :: "+ now +" ==")
 
             val playerList = players.map(_._1).toList
-            gameLoop = new GameLoop(
-              new GamingPlayer(playerList(0), GamingPlayer.Player1),
-              new GamingPlayer(playerList(1), GamingPlayer.Player2))
+            gameLoop = new GameLoop(playerList(0), playerList(1))
 
             players.map { _._2 ! GameReady(playerList.toSet, now) }
             timer(TurnEnd)
@@ -71,9 +69,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
         players.find( _._1.user.id.get == set.user ) match {
           case Some(p) =>
-            if (p._1.user.id.get == gameLoop.player1.player.user.id.get) {
+            if (p._1.user.id.get == gameLoop.player1.user.id.get) {
               gameLoop.player1.input = set.input
-            } else if (p._1.user.id.get == gameLoop.player2.player.user.id.get) {
+            } else if (p._1.user.id.get == gameLoop.player2.user.id.get) {
               gameLoop.player2.input = set.input
             }
           case None => log.info("== PlayerTurnSet not find :: "+ set.user +" ==")

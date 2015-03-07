@@ -17,12 +17,6 @@ angular.module( 'thorvarium.game', [
 
 .controller( 'GameCtrl', function GameController( $rootScope, $scope, $timeout, Game ) {
 
-  $scope.ready = false;
-  $scope.gaming = false;
-  $scope.countdown = 40;
-
-  $scope.stepTimer = null;
-
   $scope.startTimer = function() {
     $scope.stepTimer = $timeout($scope.onTimeout, 1000);
   };
@@ -68,6 +62,13 @@ angular.module( 'thorvarium.game', [
       alert('Please select your persons and weapons...');
     }
   };
+
+  /*
+  $scope.ready = false;
+  $scope.gaming = false;
+  $scope.countdown = 40;
+
+  $scope.stepTimer = null;
 
   $scope.slots = {
     "person1": {
@@ -136,11 +137,28 @@ angular.module( 'thorvarium.game', [
   } else {
     $scope.go('/chat');
   }
-
+  
   Game.start();  
+  */
+  
+  var createDebug = $.parseJSON('{"type":"game","id":"1-2","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{}}],"persons":[{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":100,"x":0.0,"y":0.0,"weapons":{}},{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":0.0,"y":0.0,"weapons":{}},{"id":3,"name":"Big","life":100,"speed":50,"size":100,"distance":50,"x":0.0,"y":0.0,"weapons":{}}],"weapons":[{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100},{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},{"id":3,"name":"Barrier","kind":3,"speed":0,"power":100,"size":0}],"now":1425729423402}');
+  var startDebug = $.parseJSON('{"type":"game_ready","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":90,"x":20.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":20.0,"y":70.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":70.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}}}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":400.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":400.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33}}}}}],"now":1425729434723}');
+
+  $scope.ready = true;
+  $scope.gaming = true;
+
+  Game.create(createDebug.id, 
+    createDebug.players, 
+    createDebug.persons, 
+    createDebug.weapons, 
+    createDebug.now);
+
+  $scope.countdown = 40;
+  Game.start(startDebug.players);
+  $scope.startTimer();
 })
 
-.service('Game', function($window) {
+.service('Game', function($window, Person) {
 
   this.id = null;
   this.players = [];
@@ -177,49 +195,80 @@ angular.module( 'thorvarium.game', [
     this.context = null;
 
     this.bgImage = null;
-    this.personsImages = [];
-
-    this.keysDown = {};
+    this.personsImages = {};
   };
 
-  this.start = function() {
+  this.start = function(players) {
 
     var that = this;
+    this.players = players;
 
     this.canvas = document.createElement("canvas");
     this.context = this.canvas.getContext("2d");
-    this.canvas.width = 512;
-    this.canvas.height = 480;
-
-    var bgImage = new Image();
-    bgImage.onload = function () {
-      that.bgImage = bgImage;
-    };
-    bgImage.src = assetsUrl + "/images/background.png";
-
-    _.each(this.persons, function(p){
-
-      var pImage = new Image();
-      pImage.onload = function () {
-        that.personsImages.push(pImage);
-      };
-      pImage.src = assetsUrl + "/images/person" + p.id + ".png";
-
-    });
+    this.canvas.width = 500;
+    this.canvas.height = 500;
 
     this.requestAnimationFrame = $window.requestAnimationFrame || 
       $window.webkitRequestAnimationFrame || 
       $window.msRequestAnimationFrame || 
       $window.mozRequestAnimationFrame;
 
-    // Let's play this game!
     this.then = Date.now();
     $window.Game = this;
-    
-    $($window).ready(function(){
-      $('.game-scenario').append(that.canvas);
-      that.main.call($window);
+
+    var bgImage = new Image();
+    bgImage.onload = function () {
+      that.bgImage = bgImage;
+      that.loaded.call(that);
+    };
+    bgImage.src = assetsUrl + "/images/background.png";
+
+    _.each(this.persons, function(p){
+      var pImage = new Image();
+      pImage.onload = function () {
+        that.personsImages[p.id] = pImage;
+        that.loaded.call(that);
+      };
+      pImage.src = assetsUrl + "/images/person" + p.id + ".png";
     });
+  };
+
+  this.loaded = function() {
+    var that = this;
+    if (this.bgImage && 
+      _.allKeys(this.personsImages).length >= 3) {
+      
+      this.players = _.map(this.players, function(p){
+        p.persons = _.mapObject(p.persons, function(person, key){
+          return new Person(person, that.personsImages[person.id], that.context);
+        });
+
+        return p;
+      });
+      
+      // Let's play this game!
+      $($window).ready(function() {
+
+        $('.game-scenario').append(that.canvas);
+        $('.game-scenario canvas').click(that.interaction);
+
+        that.main.call($window);
+      });  
+    }
+  };
+
+  this.interaction = function(e) {
+
+    var that = $window.Game;
+    var x = e.offsetX, y = e.offsetY;        
+    
+    /*
+    var persons = _.filter(that.players.persons, function(person) {
+      return (Math.pow(x-person.size, 2) + Math.pow(y-person.size, 2)) < Math.pow(person.size, 2);
+    });
+
+    console.log(persons);
+    */
   };
 
   this.update = function (modifier) {
@@ -227,17 +276,15 @@ angular.module( 'thorvarium.game', [
   };
 
   this.render = function () {
-    if (this.bgImage) {
-      this.context.drawImage(this.bgImage, 0, 0);
-    }
+    var that = this;
 
-    if (this.personsImages.length >= 3) {
-      
-    }
-
-    if (this.heroImage) {
-      this.context.drawImage(this.heroImage, this.hero.x, this.hero.y);
-    }
+    this.context.drawImage(this.bgImage, 0, 0);
+    
+    _.each(this.players, function(player) {
+      _.each(player.persons, function(person) {
+        person.draw();  
+      });
+    });
   };
 
   this.main = function () {
@@ -259,5 +306,53 @@ angular.module( 'thorvarium.game', [
   return this;
 })
 
+.factory('Person', function () {
+ 
+  function Person(person, image, context) {
+    this.person = person;
+    this.image = image;
+    this.context = context;
+  }
+
+  var MAX_SIZE = 17;
+
+  Person.prototype = {
+    draw: function(){
+
+      this.context.save();
+
+      this.context.drawImage(this.image, this.rx(), this.ry());
+
+      this.context.fillStyle = "#fff";
+      this.context.beginPath();
+      this.context.arc(this.x(), this.y(), this.size(), 0, Math.PI * 2, true);
+      this.context.closePath();
+      this.context.fill();
+
+      this.context.closePath();
+      this.context.restore();
+    },
+    x: function() {
+      return this.person.x + this.middle();
+    },
+    y: function() {
+      return this.person.y + this.middle();
+    },
+    rx: function() {
+      return this.person.x - this.middle();
+    },
+    ry: function() {
+      return this.person.y - this.middle();
+    },
+    middle: function() {
+      return this.size() / 2;
+    },
+    size: function() {
+      return (MAX_SIZE / 100) * this.person.size;
+    }
+  };
+
+  return Person;
+})
 
 ;

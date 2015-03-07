@@ -26,7 +26,7 @@ case class Person(id: Option[Long] = None,
       "distance" -> distance,
       "x" -> x,
       "y" -> y,
-      "weapons" -> weapons.map { _._2.toJson })
+      "weapons" -> Json.toJson( weapons.map( p => p._1 -> p._2.toJson ) ))
   }
 }
 

@@ -9,7 +9,7 @@ scalaVersion := "2.11.1"
 libraryDependencies ++= Seq(
   jdbc,
   anorm,
-  ws, // Play's web services module
+  ws,
   "com.typesafe.akka" %% "akka-actor" % "2.3.4",
   "com.typesafe.akka" %% "akka-slf4j" % "2.3.4",
   "org.webjars" % "bootstrap" % "3.2.0",

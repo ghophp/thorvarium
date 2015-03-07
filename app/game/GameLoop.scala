@@ -1,8 +1,8 @@
 package game
 
-import game.models.GamingPlayer
+import _root_.models.Player
 
-class GameLoop(var player1 : GamingPlayer, var player2: GamingPlayer) {
+class GameLoop(var player1 : Player, var player2: Player) {
 
   var state = GameLoop.WaitingInput
   var steps = 0
@@ -25,11 +25,11 @@ class GameLoop(var player1 : GamingPlayer, var player2: GamingPlayer) {
     }
   }
 
-  def applyMovement(p: GamingPlayer, elapsed : Long) = {
+  def applyMovement(p: Player, elapsed : Long) = {
     if (p.input.movements != null) {
 
       p.input.movements.map { m =>
-        val person = p.player.persons(m._1)
+        val person = p.persons(m._1)
         if (person.x.toInt != m._2.x.toInt ||
           person.y.toInt != m._2.y.toInt) {
 
