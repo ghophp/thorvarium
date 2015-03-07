@@ -46,7 +46,7 @@
 
 		<div class="row">
 			<div class="col-xs-12 text-center">
-				<button class="btn btn-default" type="button" ng-click="send()">Ready!</button>
+				<button class="btn btn-default" type="button" ng-click="ready()">Ready!</button>
 			</div>
 		</div>
 		
@@ -57,4 +57,9 @@
 	</div>
 
 	<div class="game-scenario text-center" ng-if="gaming"></div>
+	<div class="row" ng-if="gaming">
+		<div class="col-xs-12 text-center">
+			<button class="btn btn-default" type="button" ng-click="turn()">Ready!</button>
+		</div>
+	</div>
 </div>
