@@ -44,7 +44,7 @@ angular.module( 'thorvarium.game', [
   };
 
   $scope.turn = function() {
-
+    console.log('turn ready');
   };
 
   $scope.ready = function() {
@@ -67,7 +67,6 @@ angular.module( 'thorvarium.game', [
     }
   };
 
-  /*
   $scope.ready = false;
   $scope.gaming = false;
   $scope.countdown = 40;
@@ -143,8 +142,8 @@ angular.module( 'thorvarium.game', [
   }
   
   Game.start();  
-  */
   
+  /*
   var createDebug = $.parseJSON('{"type":"game","id":"1-2","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{}}],"persons":[{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":100,"x":0.0,"y":0.0,"weapons":{}},{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":0.0,"y":0.0,"weapons":{}},{"id":3,"name":"Big","life":100,"speed":50,"size":100,"distance":50,"x":0.0,"y":0.0,"weapons":{}}],"weapons":[{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100},{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},{"id":3,"name":"Barrier","kind":3,"speed":0,"power":100,"size":0}],"now":1425729423402}');
   var startDebug = $.parseJSON('{"type":"game_ready","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":90,"x":20.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":3,"name":"Medium","life":100,"speed":60,"size":100,"distance":50,"x":20.0,"y":70.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":70.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}}}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":400.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":400.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33}}}}}],"now":1425729434723}');
 
@@ -160,6 +159,7 @@ angular.module( 'thorvarium.game', [
   $scope.countdown = 40;
   Game.start(startDebug.players);
   $scope.startTimer();
+  */
 })
 
 .service('Game', function($rootScope, $window, Person) {
@@ -333,7 +333,7 @@ angular.module( 'thorvarium.game', [
 
       this.context.save();
 
-      this.context.drawImage(this.image, this.rx(), this.ry());
+      this.context.drawImage(this.image, this.person.x, this.person.y);
 
       this.context.fillStyle = !active ? '#fff' : '#ccc';
       this.context.beginPath();
@@ -349,12 +349,6 @@ angular.module( 'thorvarium.game', [
     },
     y: function() {
       return this.person.y + this.middle();
-    },
-    rx: function() {
-      return this.person.x - this.middle();
-    },
-    ry: function() {
-      return this.person.y - this.middle();
     },
     middle: function() {
       return this.size() / 2;
