@@ -19,7 +19,7 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
     val player2 = new Player(SessionSpec.testUser2, Player.Player2)
     player2.persons = Person.toPersons(SessionSpec.testPlayerSet)
 
-    val testTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 103, "y" -> 103)))
+    val testTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 100, "y" -> 100)))
     val testDistanceTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 400, "y" -> 400)))
   }
 

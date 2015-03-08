@@ -18,11 +18,16 @@ angular.module( 'thorvarium.game', [
 .controller( 'GameCtrl', function GameController( $rootScope, $scope, $timeout, Game ) {
 
   $scope.startTimer = function() {
+    $scope.countdown = 40;
+    if ($scope.stepTimer !== null) {
+      $timeout.cancel($scope.stepTimer);
+    }
     $scope.stepTimer = $timeout($scope.onTimeout, 1000);
   };
 
   $scope.onTimeout = function() {
     if($scope.countdown ===  0) {
+        $timeout.cancel($scope.stepTimer);
         return;
     }
 
@@ -120,20 +125,20 @@ angular.module( 'thorvarium.game', [
         switch(message.type) {
           case 'game_ready':
             $scope.$apply(function(){
-              $scope.countdown = 40;
+              $scope.startTimer();
               $scope.gaming = true;
               Game.start(message.players);
             });
           break;
           case 'turn_ready':
             $scope.$apply(function(){
-              $scope.countdown = 40;
+              $scope.startTimer();
               Game.turn(message.players);
             });
           break;
           case 'turn_start':
             $scope.$apply(function(){
-              $scope.countdown = 40;
+              $scope.startTimer();
               $scope.waiting = false;
               Game.turnStart();
             });

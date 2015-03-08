@@ -64,6 +64,6 @@ object GameLoop {
   val sceneWidth = 500
   val sceneHeight = 500
 
-  val MaxSpeed = 30.0 // 2 pixels per second
+  val MaxSpeed = 30.0 // 30 pixels per second
   val MaxDistance = 120.0
 }

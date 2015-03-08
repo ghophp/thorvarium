@@ -13,4 +13,5 @@ I homage @Olifiers (Henrique Olifers), a very talented developer that brought a 
 
 * Remove password from JSON
 * Limit the movement to the game board at server
+* Move on the client and on the server parallel, then authority with server
 

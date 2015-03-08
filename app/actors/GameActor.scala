@@ -72,6 +72,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
             }
           case None => log.info("== PlayerTurnSet not find :: "+ set.user +" ==")
         }
+        if (players.count(_._1.input != null) >= 2) {
+          self ! TurnEnd
+        }
       }
 
     case ReadyToTurn =>
