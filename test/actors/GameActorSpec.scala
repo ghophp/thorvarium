@@ -69,7 +69,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
 
       probe2.expectMsgClass(classOf[StartGame])
-      probe2.expectMsg(Duration.create(50, TimeUnit.SECONDS), NothingSelected)
+      probe2.expectMsg(Duration.create(41, TimeUnit.SECONDS), NothingSelected)
     }
 
     "if both selected, proceed to game loop" in new GameProbe {

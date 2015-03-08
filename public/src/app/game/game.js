@@ -23,7 +23,6 @@ angular.module( 'thorvarium.game', [
 
   $scope.onTimeout = function() {
     if($scope.countdown ===  0) {
-        $timeout.cancel($scope.stepTimer);
         return;
     }
 
@@ -71,6 +70,12 @@ angular.module( 'thorvarium.game', [
       alert('Please select your persons and weapons...');
     }
   };
+
+  $scope.$on('choosing', function() {
+    $rootScope.ws.send(JSON.stringify({
+      "type": "ready_to_turn"
+    }));
+  });
 
   $scope.ready = false;
   $scope.gaming = false;
@@ -123,8 +128,14 @@ angular.module( 'thorvarium.game', [
           case 'turn_ready':
             $scope.$apply(function(){
               $scope.countdown = 40;
-              $scope.waiting = false;
               Game.turn(message.players);
+            });
+          break;
+          case 'turn_start':
+            $scope.$apply(function(){
+              $scope.countdown = 40;
+              $scope.waiting = false;
+              Game.turnStart();
             });
           break;
           case 'nothing_selected':
@@ -153,26 +164,35 @@ angular.module( 'thorvarium.game', [
   }
 })
 
-.service('Game', function($rootScope, $window, Person) {
+.constant('CHOOSING', 1)
+.constant('RUNNING', 2)
+.constant('WAITING', 3)
+
+.constant('MOVE_INDICATOR', 5)
+.constant('MAX_SIZE', 17)
+.constant('MAX_DISTANCE', 120)
+.constant('MAX_SPEED', 30)
+
+.service('Game', function($rootScope, $window, Person, 
+  CHOOSING, 
+  RUNNING, 
+  WAITING,
+  MAX_SPEED) {
 
   this.id = null;
   this.players = [];
   this.persons = [];
   this.weapons = [];
-
   this.now = null;
   this.then = null;
-
   this.canvas = null;
   this.context = null;
-
   this.bgImage = null;
   this.personsImages = {};
   this.active = null;
-
   this.mouseX = 0;
   this.mouseY = 0;
-
+  this.state = null;
   this.requestAnimationFrame = null;
 
   this.create = function(id, persons, weapons, now) {
@@ -188,14 +208,12 @@ angular.module( 'thorvarium.game', [
     this.persons = [];
     this.weapons = [];
     this.now = null;
-    
     this.canvas = null;
     this.context = null;
-
+    this.state = null;
     this.bgImage = null;
     this.personsImages = {};
     this.active = null;
-
     this.mouseX = 0;
     this.mouseY = 0;
   };
@@ -236,7 +254,10 @@ angular.module( 'thorvarium.game', [
   };
 
   this.turn = function(players) {
+    
     var that = this;
+    var hasAction = false;
+
     _.each(players, function(p) {
 
       var pl = _.find(that.players, function(o) {
@@ -248,18 +269,32 @@ angular.module( 'thorvarium.game', [
           var curr = pl.persons[key];
           if (angular.isDefined(curr)) {
             curr.movement = null;
-            curr.person.x = person.x;
-            curr.person.y = person.y;
+            curr.to = {x: person.x, y: person.y};
+            hasAction = true;
           }
         });
       }
     });
+
+    if (hasAction) {
+      this.state = RUNNING;
+    } else {
+      this.waitForTurn();
+    }
+  };
+
+  this.waitForTurn = function() {
+    this.state = WAITING;
+    $rootScope.$broadcast("choosing");
+  };
+
+  this.turnStart = function() {
+    this.state = CHOOSING;
   };
 
   this.loaded = function() {
     var that = this;
-    if (this.bgImage && 
-      _.allKeys(this.personsImages).length >= 3) {
+    if (this.bgImage && _.allKeys(this.personsImages).length >= 3) {
       
       this.players = _.map(this.players, function(p){
         p.persons = _.mapObject(p.persons, function(person, key){
@@ -268,7 +303,7 @@ angular.module( 'thorvarium.game', [
 
         return p;
       });
-      
+
       // Let's play this game!
       $($window).ready(function() {
 
@@ -276,6 +311,7 @@ angular.module( 'thorvarium.game', [
         $('.game-scenario canvas').click(that.interaction);
         $('.game-scenario canvas').mousemove(that.movement);
 
+        that.waitForTurn();
         that.main.call($window);
       });  
     }
@@ -288,35 +324,35 @@ angular.module( 'thorvarium.game', [
   };
 
   this.interaction = function(e) {
-
     var that = $window.Game;
-    var x = e.offsetX, y = e.offsetY;
-    
-    if(!angular.isDefined(e.offsetX)) {
-      x = e.pageX-$('.game-scenario canvas').offset().left;
-      y = e.pageY-$('.game-scenario canvas').offset().top;
-    }
-
-    if (that.active !== null) {
-
-      var active = _.find(that.me().persons, function(p, key) {
-        return key == that.active;
-      });
-
-      if (angular.isDefined(active)) {
-        active.movement = angular.copy(active.moving);
-        active.moving = null;
-        that.active = null;
+    if (that.state === CHOOSING) {
+      var x = e.offsetX, y = e.offsetY;
+      if(!angular.isDefined(e.offsetX)) {
+        x = e.pageX-$('.game-scenario canvas').offset().left;
+        y = e.pageY-$('.game-scenario canvas').offset().top;
       }
 
-    } else {
+      if (that.active !== null) {
 
-      var person = _.findKey(that.me().persons, function(p) {
-        return p.clicked(x, y) && p.movement === null;
-      });
+        var active = _.find(that.me().persons, function(p, key) {
+          return key == that.active;
+        });
 
-      if (angular.isDefined(person)) {
-        that.active = person;
+        if (angular.isDefined(active)) {
+          active.movement = angular.copy(active.moving);
+          active.moving = null;
+          that.active = null;
+        }
+
+      } else {
+
+        var person = _.findKey(that.me().persons, function(p) {
+          return p.clicked(x, y) && p.movement === null;
+        });
+
+        if (angular.isDefined(person)) {
+          that.active = person;
+        }
       }
     }
   };
@@ -335,7 +371,6 @@ angular.module( 'thorvarium.game', [
 
   // Return the users actions at this turn
   this.input = function() {
-
     var persons = {};
     _.each(this.me().persons, function(person, key) {
       if (person.movement !== null) {
@@ -343,12 +378,44 @@ angular.module( 'thorvarium.game', [
       }
     });
 
-    console.log(persons);
+    this.state = WAITING;
     return persons;
   };
 
-  this.update = function (modifier) {
+  this.update = function (elapsed) {
     
+    var hasAction = false;
+    _.each(this.players, function(player) {
+      _.each(player.persons, function(p, key) {
+        if (p.to !== null) {
+
+          var angle = Math.atan2(p.to.y - p.person.y, p.to.x - p.person.x);
+          var speed = ((MAX_SPEED / 100.0) * p.person.speed) * elapsed;
+
+          if (Math.abs(p.person.x - p.to.x) > 1) {
+            
+            p.person.x = p.person.x + (Math.cos(angle) * speed);
+            hasAction = true;
+
+          } else {
+            p.person.x = p.to.x;
+          }
+          
+          if (Math.abs(p.person.y - p.to.y) > 1) {
+          
+            p.person.y = p.person.y + (Math.sin(angle) * speed);
+            hasAction = true;
+          
+          } else {
+            p.person.y = p.to.y;
+          }
+        }
+      });
+    });
+
+    if (!hasAction) {
+      this.waitForTurn();
+    }
   };
 
   this.render = function () {
@@ -369,25 +436,24 @@ angular.module( 'thorvarium.game', [
   };
 
   this.main = function () {
-
     var that = $window.Game;
 
     that.now = Date.now();
     var delta = that.now - that.then;
 
-    that.update(delta / 1000);
+    if (that.state == RUNNING) {
+      that.update(delta / 1000);
+    }
+    
     that.render();
-
     that.then = that.now;
-
-    // Request to do this again ASAP
     that.requestAnimationFrame.call($window, that.main);
   };
 
   return this;
 })
 
-.factory('Person', function () {
+.factory('Person', function (MOVE_INDICATOR, MAX_SIZE, MAX_DISTANCE) {
  
   function Person(person, image, context) {
     this.person = person;
@@ -395,11 +461,8 @@ angular.module( 'thorvarium.game', [
     this.context = context;
     this.movement = null;
     this.moving = null;
+    this.to = null;
   }
-
-  var MOVE_INDICATOR = 5;
-  var MAX_SIZE = 17;
-  var MAX_DISTANCE = 120;
 
   Person.prototype = {
     draw: function(active) {

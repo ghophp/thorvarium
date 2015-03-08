@@ -2,7 +2,7 @@ package game
 
 import _root_.models.Player
 
-class GameLoop(var player1 : Player, var player2: Player) {
+class GameLoop(var players : Set[Player]) {
 
   var state = GameLoop.WaitingInput
   var steps = 0
@@ -12,9 +12,9 @@ class GameLoop(var player1 : Player, var player2: Player) {
     steps = 0
   }
 
-  def update(elapsed : Long) = {
+  def update(elapsed : Double) = {
 
-    Set(player1, player2).map { p =>
+    players.map { p =>
       if (p.input != null) {
         applyMovement(p, elapsed)
       }
@@ -25,21 +25,27 @@ class GameLoop(var player1 : Player, var player2: Player) {
     }
   }
 
-  def applyMovement(p: Player, elapsed : Long) = {
+  def applyMovement(p: Player, elapsed : Double) = {
     if (p.input.movements != null) {
 
       p.input.movements.map { m =>
 
         val person = p.persons(m._1)
-        val angle = Math.atan2(m._2.x - person.x, m._2.y - person.y)
+        val angle = Math.atan2(m._2.y - person.y, m._2.x - person.x)
+        val speed = ((GameLoop.MaxSpeed / 100.0) * person.speed) * elapsed
 
-        if (Math.abs(person.x.toInt - m._2.x.toInt) > 1) {
-          person.x += Math.sin(angle) * (((GameLoop.MaxSpeed / 100.0) * person.speed) / 1000)
+        if (Math.abs(person.x - m._2.x) > 1) {
+          person.x = person.x + (Math.cos(angle) * speed)
           steps += 1
+        } else {
+          person.x = m._2.x
         }
-        if (Math.abs(person.y.toInt - m._2.y.toInt) > 1) {
-          person.y += Math.cos(angle) * (((GameLoop.MaxSpeed / 100.0) * person.speed) / 1000)
+
+        if (Math.abs(person.y - m._2.y) > 1) {
+          person.y = person.y + (Math.sin(angle) * speed)
           steps += 1
+        } else {
+          person.y = m._2.y
         }
       }
     }
@@ -47,8 +53,7 @@ class GameLoop(var player1 : Player, var player2: Player) {
 
   def newTurn() = {
     turns += 1
-    player1.input = null
-    player2.input = null
+    players.map { _.input = null }
   }
 }
 
@@ -59,6 +64,6 @@ object GameLoop {
   val sceneWidth = 500
   val sceneHeight = 500
 
-  val MaxSpeed = 2.0 // 2 pixels per second
+  val MaxSpeed = 30.0 // 2 pixels per second
   val MaxDistance = 120.0
 }

@@ -36,6 +36,8 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
           if (persons.size >= 3) {
             game ! PlayerSet(user.id.get, persons)
           }
+        case "ready_to_turn" if game != null =>
+          game ! ReadyToTurn
         case "input" if game != null =>
           val input = GamingSet.toTurnSet(command)
           if (input != null) {
@@ -76,6 +78,9 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "players" -> r.players.map(u => u.toJson),
         "now" -> r.now,
         "turns" -> r.turns)
+
+    case TurnStart =>
+      out ! Json.obj("type" -> "turn_start")
 
     case NothingSelected if sender == game =>
       game = null

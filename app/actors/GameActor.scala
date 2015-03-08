@@ -9,6 +9,7 @@ import game.models.GamingSet
 import models.{Weapon, Person, Player, User}
 import org.joda.time.DateTime
 import scala.concurrent.duration._
+import util.control.Breaks._
 
 class GameActor(id: String) extends Actor with ActorLogging {
 
@@ -19,6 +20,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
   var stepTimer : Cancellable = null
   var gameLoop : GameLoop = null
+  var readyToTurn : Int = 0
 
   def receive = LoggingReceive {
 
@@ -48,33 +50,35 @@ class GameActor(id: String) extends Actor with ActorLogging {
         case Some(p) =>
           p._1.persons = set.persons
           if (players.count( _._1.persons.size >= 3 ) >= 2 && gameLoop == null) {
-
             stepTimer.cancel()
 
             val now = DateTime.now().getMillis
             log.info("== Game ready at :: "+ now +" ==")
 
-            val playerList = players.map(_._1).toList
-            gameLoop = new GameLoop(playerList(0), playerList(1))
-
-            players.map { _._2 ! GameReady(playerList.toSet, now) }
-            timer(TurnEnd)
+            val playerSet = players.map(_._1).toSet
+            gameLoop = new GameLoop(playerSet)
+            players.map { _._2 ! GameReady(playerSet, now) }
           }
         case None => log.info("== PlayerSet not find :: "+ set.user +" ==")
       }
 
     case set:PlayerTurnSet =>
       if (gameLoop != null && set.input != null) {
-
         players.find( _._1.user.id.get == set.user ) match {
           case Some(p) =>
-            if (p._1.user.id.get == gameLoop.player1.user.id.get) {
-              gameLoop.player1.input = set.input
-            } else if (p._1.user.id.get == gameLoop.player2.user.id.get) {
-              gameLoop.player2.input = set.input
+            gameLoop.players.find( _.user.id.get == p._1.user.id.get ) match {
+              case Some(pl) => pl.input = set.input
+              case None => log.info("== PlayerTurnSet not find on GameLoop :: "+ set.user +" ==")
             }
           case None => log.info("== PlayerTurnSet not find :: "+ set.user +" ==")
         }
+      }
+
+    case ReadyToTurn =>
+      readyToTurn += 1
+      if (readyToTurn >= 2) {
+        players.map { _._2 ! TurnStart }
+        timer(TurnEnd)
       }
 
     case TurnEnd if sender == self =>
@@ -83,24 +87,33 @@ class GameActor(id: String) extends Actor with ActorLogging {
         stepTimer.cancel()
         gameLoop.state = GameLoop.Running
 
+        log.info("== Game turn start ==")
+
         var lastTime = System.currentTimeMillis()
         while (gameLoop.state == GameLoop.Running) {
+
           val current = System.currentTimeMillis()
+          val delta = current - lastTime
 
-          gameLoop.reset()
-          gameLoop.update(current - lastTime)
+          breakable {
+            if (delta <= 0.0) {
+              break()
+            }
 
-          lastTime = current
+            gameLoop.reset()
+            gameLoop.update(delta.toDouble / 1000.0)
+
+            lastTime = current
+          }
         }
 
+        readyToTurn = 0
         gameLoop.newTurn()
 
         players.map { _._2 ! TurnReady(
           players.map(_._1).toSet,
           DateTime.now().getMillis,
           gameLoop.turns) }
-
-        timer(TurnEnd)
       }
 
     case NothingSelected if sender == self =>
@@ -158,6 +171,8 @@ case class GameReady(players: Set[Player], now: Long)
 case class TurnReady(players: Set[Player], now: Long, turns: Int)
 case class PlayerTurnSet(user: Long, input: GamingSet)
 
+object TurnStart
+object ReadyToTurn
 object TurnEnd
 object NothingSelected
 object Won
