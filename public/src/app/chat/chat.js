@@ -99,14 +99,9 @@ angular.module( 'thorvarium.chat', [
 
             if (angular.isDefined(message.id)) {
 
-              var players = _.filter($scope.members, function(x) {
-                return typeof _.find(message.players, function(i) { return i.id == x.id; }) !== 'undefined';
-              });
-
               $scope.$apply(function(){
                 
                 Game.create(message.id, 
-                  players,
                   message.persons,
                   message.weapons,
                   new Date(message.now));

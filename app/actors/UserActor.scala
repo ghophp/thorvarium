@@ -6,8 +6,8 @@ import akka.event.LoggingReceive
 import akka.actor.ActorRef
 import akka.actor.Props
 import game.models.GamingSet
-import models.{Weapon, Person, Player, User}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import models.{Person, User}
+import play.api.libs.json.{JsValue, Json}
 
 import scala.xml.Utility
 
@@ -60,7 +60,6 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
       out ! Json.obj(
         "type" -> "game",
         "id" -> s.id,
-        "players" -> s.players.map(u => u.toJson),
         "persons" -> s.persons.map { _.toJson },
         "weapons" -> s.weapons.map { _.toJson },
         "now" -> s.now)
@@ -70,6 +69,13 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "type" -> "game_ready",
         "players" -> r.players.map(u => u.toJson),
         "now" -> r.now)
+
+    case r:TurnReady if sender == game =>
+      out ! Json.obj(
+        "type" -> "turn_ready",
+        "players" -> r.players.map(u => u.toJson),
+        "now" -> r.now,
+        "turns" -> r.turns)
 
     case NothingSelected if sender == game =>
       game = null

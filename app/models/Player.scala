@@ -4,26 +4,22 @@ import game.GameLoop
 import game.models.GamingSet
 import play.api.libs.json.Json
 
-case class Player(user: User,  slot: Int, var persons : Map[String, Person] = Map.empty) {
+case class Player(user: User,  slot: Int) {
 
   private var _input: GamingSet = null
+  private var _persons: Map[String, Person] = Map.empty
 
-  val Player1Start = Map[String, Map[String, Float]](
-    Player.PersonSlot1 -> Map("x" -> 20f, "y" -> 20f),
-    Player.PersonSlot2 -> Map("x" -> 20f, "y" -> 70f),
-    Player.PersonSlot3 -> Map("x" -> 70f, "y" -> 20f))
+  val Player1Start = Map[String, Map[String, Double]](
+    Player.PersonSlot1 -> Map("x" -> 20.0, "y" -> 20.0),
+    Player.PersonSlot2 -> Map("x" -> 20.0, "y" -> 70.0),
+    Player.PersonSlot3 -> Map("x" -> 70.0, "y" -> 20.0))
 
-  val Player2Start = Map[String, Map[String, Float]](
-    Player.PersonSlot1 -> Map("x" -> 450f, "y" -> 450f),
-    Player.PersonSlot2 -> Map("x" -> 450f, "y" -> 400f),
-    Player.PersonSlot3 -> Map("x" -> 400f, "y" -> 450f))
+  val Player2Start = Map[String, Map[String, Double]](
+    Player.PersonSlot1 -> Map("x" -> 450.0, "y" -> 450.0),
+    Player.PersonSlot2 -> Map("x" -> 450.0, "y" -> 400.0),
+    Player.PersonSlot3 -> Map("x" -> 400.0, "y" -> 450.0))
 
   val startPosition = if (slot == Player.Player1) { Player1Start } else { Player2Start }
-  persons.map { p =>
-    val slot = startPosition(p._1)
-    p._2.x = slot("x")
-    p._2.y = slot("y")
-  }
 
   def toJson = {
     Json.obj(
@@ -50,6 +46,19 @@ case class Player(user: User,  slot: Int, var persons : Map[String, Person] = Ma
     }
 
     _input = set
+  }
+
+  def persons = _persons
+  def persons_= (set:Map[String, Person]):Unit = {
+    if (set != null && set.size > 0) {
+      set.map { p =>
+        val slot = startPosition(p._1)
+        p._2.x = slot("x")
+        p._2.y = slot("y")
+      }
+    }
+
+    _persons = set
   }
 }
 

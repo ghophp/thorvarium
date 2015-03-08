@@ -44,10 +44,15 @@ angular.module( 'thorvarium.game', [
   };
 
   $scope.turn = function() {
-    console.log('turn ready');
+    $rootScope.ws.send(JSON.stringify({
+      "type": "input", 
+      "persons": Game.input()
+    }));
+
+    $scope.waiting = true;
   };
 
-  $scope.ready = function() {
+  $scope.options = function() {
     
     var slots = _.filter($scope.slots, function(slot) {
       return slot.id > 0 && slot.weapon1 > 0 && slot.weapon2 > 0;
@@ -69,28 +74,29 @@ angular.module( 'thorvarium.game', [
 
   $scope.ready = false;
   $scope.gaming = false;
+  $scope.waiting = false;
   $scope.countdown = 40;
 
   $scope.stepTimer = null;
 
   $scope.slots = {
     "person1": {
-      "id": 0,
+      "id": 2,
       "name": "Person 1",
-      "weapon1": 0,
-      "weapon2": 0
+      "weapon1": 2,
+      "weapon2": 2
     },
     "person2": {
-      "id": 0,
+      "id": 2,
       "name": "Person 2",
-      "weapon1": 0,
-      "weapon2": 0
+      "weapon1": 2,
+      "weapon2": 2
     },
     "person3": {
-      "id": 0,
+      "id": 2,
       "name": "Person 3",
-      "weapon1": 0,
-      "weapon2": 0
+      "weapon1": 2,
+      "weapon2": 2
     }
   };
 
@@ -109,11 +115,16 @@ angular.module( 'thorvarium.game', [
         switch(message.type) {
           case 'game_ready':
             $scope.$apply(function(){
-              
-              $scope.stopTimer();
+              $scope.countdown = 40;
               $scope.gaming = true;
-
-              Game.start();
+              Game.start(message.players);
+            });
+          break;
+          case 'turn_ready':
+            $scope.$apply(function(){
+              $scope.countdown = 40;
+              $scope.waiting = false;
+              Game.turn(message.players);
             });
           break;
           case 'nothing_selected':
@@ -140,26 +151,6 @@ angular.module( 'thorvarium.game', [
   } else {
     $scope.go('/chat');
   }
-  
-  Game.start();  
-  
-  /*
-  var createDebug = $.parseJSON('{"type":"game","id":"1-2","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{}}],"persons":[{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":100,"x":0.0,"y":0.0,"weapons":{}},{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":0.0,"y":0.0,"weapons":{}},{"id":3,"name":"Big","life":100,"speed":50,"size":100,"distance":50,"x":0.0,"y":0.0,"weapons":{}}],"weapons":[{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100},{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},{"id":3,"name":"Barrier","kind":3,"speed":0,"power":100,"size":0}],"now":1425729423402}');
-  var startDebug = $.parseJSON('{"type":"game_ready","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":90,"x":20.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":3,"name":"Medium","life":100,"speed":60,"size":100,"distance":50,"x":20.0,"y":70.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":70.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}}}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":400.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":400.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33}}}}}],"now":1425729434723}');
-
-  $scope.ready = true;
-  $scope.gaming = true;
-
-  Game.create(createDebug.id, 
-    createDebug.players, 
-    createDebug.persons, 
-    createDebug.weapons, 
-    createDebug.now);
-
-  $scope.countdown = 40;
-  Game.start(startDebug.players);
-  $scope.startTimer();
-  */
 })
 
 .service('Game', function($rootScope, $window, Person) {
@@ -179,11 +170,13 @@ angular.module( 'thorvarium.game', [
   this.personsImages = {};
   this.active = null;
 
+  this.mouseX = 0;
+  this.mouseY = 0;
+
   this.requestAnimationFrame = null;
 
-  this.create = function(id, players, persons, weapons, now) {
+  this.create = function(id, persons, weapons, now) {
     this.id = id;
-    this.players = players;
     this.persons = persons;
     this.weapons = weapons;
     this.now = now;
@@ -202,6 +195,9 @@ angular.module( 'thorvarium.game', [
     this.bgImage = null;
     this.personsImages = {};
     this.active = null;
+
+    this.mouseX = 0;
+    this.mouseY = 0;
   };
 
   this.start = function(players) {
@@ -239,6 +235,27 @@ angular.module( 'thorvarium.game', [
     });
   };
 
+  this.turn = function(players) {
+    var that = this;
+    _.each(players, function(p) {
+
+      var pl = _.find(that.players, function(o) {
+        return o.user.id == p.user.id;
+      });
+
+      if (angular.isDefined(p)) {
+        _.each(p.persons, function(person, key) {
+          var curr = pl.persons[key];
+          if (angular.isDefined(curr)) {
+            curr.movement = null;
+            curr.person.x = person.x;
+            curr.person.y = person.y;
+          }
+        });
+      }
+    });
+  };
+
   this.loaded = function() {
     var that = this;
     if (this.bgImage && 
@@ -257,6 +274,7 @@ angular.module( 'thorvarium.game', [
 
         $('.game-scenario').append(that.canvas);
         $('.game-scenario canvas').click(that.interaction);
+        $('.game-scenario canvas').mousemove(that.movement);
 
         that.main.call($window);
       });  
@@ -274,13 +292,59 @@ angular.module( 'thorvarium.game', [
     var that = $window.Game;
     var x = e.offsetX, y = e.offsetY;
     
-    var person = _.findKey(that.me().persons, function(p) {
-      return p.clicked(x, y);
+    if(!angular.isDefined(e.offsetX)) {
+      x = e.pageX-$('.game-scenario canvas').offset().left;
+      y = e.pageY-$('.game-scenario canvas').offset().top;
+    }
+
+    if (that.active !== null) {
+
+      var active = _.find(that.me().persons, function(p, key) {
+        return key == that.active;
+      });
+
+      if (angular.isDefined(active)) {
+        active.movement = angular.copy(active.moving);
+        active.moving = null;
+        that.active = null;
+      }
+
+    } else {
+
+      var person = _.findKey(that.me().persons, function(p) {
+        return p.clicked(x, y) && p.movement === null;
+      });
+
+      if (angular.isDefined(person)) {
+        that.active = person;
+      }
+    }
+  };
+
+  this.movement = function(e) {
+    var that = $window.Game;
+    var x = e.offsetX, y = e.offsetY;
+    if(!angular.isDefined(e.offsetX)) {
+      x = e.pageX-$('.game-scenario canvas').offset().left;
+      y = e.pageY-$('.game-scenario canvas').offset().top;
+    }
+
+    that.mouseX = x;
+    that.mouseY = y;
+  };
+
+  // Return the users actions at this turn
+  this.input = function() {
+
+    var persons = {};
+    _.each(this.me().persons, function(person, key) {
+      if (person.movement !== null) {
+        persons[key] = angular.copy(person.movement);
+      }
     });
 
-    if (angular.isDefined(person)) {
-      that.active = person;
-    }
+    console.log(persons);
+    return persons;
   };
 
   this.update = function (modifier) {
@@ -294,7 +358,12 @@ angular.module( 'thorvarium.game', [
     
     _.each(this.players, function(player) {
       _.each(player.persons, function(person, key) {
-        person.draw(player.user.id === $rootScope.user.id && key === that.active); 
+        
+        var active = player.user.id === $rootScope.user.id && key === that.active;
+        person.draw(active);
+        if (active && person.movement === null) {
+          person.move(that.mouseX, that.mouseY);
+        }
       });
     });
   };
@@ -324,16 +393,28 @@ angular.module( 'thorvarium.game', [
     this.person = person;
     this.image = image;
     this.context = context;
+    this.movement = null;
+    this.moving = null;
   }
 
+  var MOVE_INDICATOR = 5;
   var MAX_SIZE = 17;
+  var MAX_DISTANCE = 120;
 
   Person.prototype = {
     draw: function(active) {
 
       this.context.save();
 
-      this.context.drawImage(this.image, this.person.x, this.person.y);
+      if (this.movement !== null) {
+        this.context.fillStyle = 'rgba(255, 200, 255, 0.5)';
+        this.context.beginPath();
+        this.context.arc(this.movement.x, this.movement.y, MOVE_INDICATOR, 0, Math.PI * 2, true);
+        this.context.closePath();
+        this.context.fill();
+      }
+
+      this.context.drawImage(this.image, this.rx(), this.ry());
 
       this.context.fillStyle = !active ? '#fff' : '#ccc';
       this.context.beginPath();
@@ -344,14 +425,61 @@ angular.module( 'thorvarium.game', [
       this.context.closePath();
       this.context.restore();
     },
+    move: function(x, y) {
+
+      var cx = this.x();
+      var cy = this.y();
+      var r = this.distance();
+      var dx = x - cx;
+      var dy = y - cy;
+      var angle = Math.atan2(dy,dx);
+      
+      var xx = cx + r*Math.cos(angle);
+      var yy = cy + r*Math.sin(angle);
+
+      var dist = dx * dx + dy * dy;
+      if (dist <= r * r) {
+        xx = x;
+        yy = y;
+      }
+
+      this.context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      this.context.fillStyle = 'rgba(255, 255, 255, 0.5)';
+      
+      this.context.beginPath();
+      this.context.arc(cx,cy,r,0,Math.PI*2);
+      this.context.closePath();
+      this.context.stroke();
+
+      this.context.beginPath();
+      this.context.moveTo(cx,cy);
+      this.context.lineTo(xx,yy);
+      this.context.stroke();
+
+      this.context.beginPath();
+      this.context.arc(xx,yy,5,0,Math.PI*2);
+      this.context.closePath();
+      this.context.fill();
+      
+      this.moving = {x: xx, y: yy};
+    },
     x: function() {
       return this.person.x + this.middle();
     },
     y: function() {
       return this.person.y + this.middle();
     },
+    rx: function() {
+      return this.person.x - this.middle();
+    },
+    ry: function() {
+      return this.person.y - this.middle();
+    },
     middle: function() {
       return this.size() / 2;
+    },
+    distance: function() {
+      return (MAX_DISTANCE / 100) * this.person.distance;
     },
     size: function() {
       return (MAX_SIZE / 100) * this.person.size;

@@ -26,7 +26,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
       log.info("== Player enter :: "+ subscribe.user.nickname +" ==")
 
-      players += (new Player(subscribe.user, players.size + 1, Map.empty) -> subscribe.actor)
+      players += (new Player(subscribe.user, players.size + 1) -> subscribe.actor)
       context watch subscribe.actor
 
       if (players.size >= 2) {
@@ -35,7 +35,6 @@ class GameActor(id: String) extends Actor with ActorLogging {
         log.info("== Start choose timer at :: "+ now +" ==")
 
         players.map { _._2 ! StartGame(id,
-          players.map(_._1).toSet,
           Person.list,
           Weapon.list,
           now) }
@@ -83,8 +82,8 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
         stepTimer.cancel()
         gameLoop.state = GameLoop.Running
-        var lastTime = System.currentTimeMillis()
 
+        var lastTime = System.currentTimeMillis()
         while (gameLoop.state == GameLoop.Running) {
           val current = System.currentTimeMillis()
 
@@ -94,7 +93,13 @@ class GameActor(id: String) extends Actor with ActorLogging {
           lastTime = current
         }
 
-        gameLoop.turns += 1
+        gameLoop.newTurn()
+
+        players.map { _._2 ! TurnReady(
+          players.map(_._1).toSet,
+          DateTime.now().getMillis,
+          gameLoop.turns) }
+
         timer(TurnEnd)
       }
 
@@ -144,13 +149,13 @@ class GameActor(id: String) extends Actor with ActorLogging {
 case class SubscribeGame(user: User, actor: ActorRef)
 case class EndGame(id : String)
 case class StartGame(id : String,
-                     players : Set[Player],
                      persons: List[Person],
                      weapons: List[Weapon],
                      now: Long)
 
 case class PlayerSet(user: Long, persons: Map[String, Person])
 case class GameReady(players: Set[Player], now: Long)
+case class TurnReady(players: Set[Player], now: Long, turns: Int)
 case class PlayerTurnSet(user: Long, input: GamingSet)
 
 object TurnEnd

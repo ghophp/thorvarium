@@ -29,18 +29,26 @@ class GameLoop(var player1 : Player, var player2: Player) {
     if (p.input.movements != null) {
 
       p.input.movements.map { m =>
+
         val person = p.persons(m._1)
-        if (person.x.toInt != m._2.x.toInt ||
-          person.y.toInt != m._2.y.toInt) {
+        val angle = Math.atan2(m._2.x - person.x, m._2.y - person.y)
 
-          val angle = Math.atan2(m._2.x - person.x, m._2.y - person.y)
+        if (Math.abs(person.x.toInt - m._2.x.toInt) > 1) {
           person.x += Math.sin(angle) * (((GameLoop.MaxSpeed / 100.0) * person.speed) / 1000)
+          steps += 1
+        }
+        if (Math.abs(person.y.toInt - m._2.y.toInt) > 1) {
           person.y += Math.cos(angle) * (((GameLoop.MaxSpeed / 100.0) * person.speed) / 1000)
-
           steps += 1
         }
       }
     }
+  }
+
+  def newTurn() = {
+    turns += 1
+    player1.input = null
+    player2.input = null
   }
 }
 
