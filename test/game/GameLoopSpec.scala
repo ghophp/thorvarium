@@ -23,7 +23,10 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
     val testTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 100, "y" -> 100)))
     val testDistanceTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 400, "y" -> 400)))
-    val testInverseDistanceTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 20, "y" -> 20)))
+    val testInverseTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 20, "y" -> 20)))
+
+    val testBoardTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 5, "y" -> 5)))
+    val testBoardInvertTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 495, "y" -> 495)))
   }
 
   "GameLoopTest" should {
@@ -36,11 +39,11 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
       p1.persons(Player.PersonSlot1).x must beEqualTo(20)
       p1.persons(Player.PersonSlot1).y must beEqualTo(20)
-      p2.persons(Player.PersonSlot1).x must beEqualTo(450)
-      p2.persons(Player.PersonSlot1).y must beEqualTo(450)
+      p2.persons(Player.PersonSlot1).x must beEqualTo(480)
+      p2.persons(Player.PersonSlot1).y must beEqualTo(480)
     }
 
-    "must move ship to the point and not allow " in new GameLoopData {
+    "must move ship to the point" in new GameLoopData {
 
       val gameTest = new GameLoop(Set(player1, player2))
 
@@ -89,9 +92,32 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       val person2 = p2.persons(Player.PersonSlot1)
       val maxDistance2 = (GameLoop.MaxDistance / 100) * person2.distance
 
-      p2.input = GamingSet.toTurnSet(testInverseDistanceTurnSet)
-      p2.input.movements(Player.PersonSlot1).x must beEqualTo(450 - maxDistance)
-      p2.input.movements(Player.PersonSlot1).y must beEqualTo(450 - maxDistance)
+      p2.input = GamingSet.toTurnSet(testInverseTurnSet)
+      p2.input.movements(Player.PersonSlot1).x must beEqualTo(480 - maxDistance)
+      p2.input.movements(Player.PersonSlot1).y must beEqualTo(480 - maxDistance)
+    }
+
+    "must not move ship to minimum board gap" in new GameLoopData {
+
+      val gameTest = new GameLoop(Set(player1, player2))
+
+      var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
+      val person1 = p1.persons(Player.PersonSlot1)
+      val maxDistance = (GameLoop.MaxDistance / 100) * person1.distance
+
+      p1.input = GamingSet.toTurnSet(testBoardTurnSet)
+      p1.input.movements(Player.PersonSlot1).x must beEqualTo(GameLoop.SceneGap)
+      p1.input.movements(Player.PersonSlot1).y must beEqualTo(GameLoop.SceneGap)
+
+      // Inverse
+
+      var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
+      val person2 = p2.persons(Player.PersonSlot1)
+      val maxDistance2 = (GameLoop.MaxDistance / 100) * person2.distance
+
+      p2.input = GamingSet.toTurnSet(testBoardInvertTurnSet)
+      p2.input.movements(Player.PersonSlot1).x must beEqualTo(GameLoop.SceneGapW)
+      p2.input.movements(Player.PersonSlot1).y must beEqualTo(GameLoop.SceneGapH)
     }
   }
 }

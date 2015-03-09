@@ -15,9 +15,9 @@ case class Player(user: User,  slot: Int) {
     Player.PersonSlot3 -> Map("x" -> 70.0, "y" -> 20.0))
 
   val Player2Start = Map[String, Map[String, Double]](
-    Player.PersonSlot1 -> Map("x" -> 450.0, "y" -> 450.0),
-    Player.PersonSlot2 -> Map("x" -> 450.0, "y" -> 400.0),
-    Player.PersonSlot3 -> Map("x" -> 400.0, "y" -> 450.0))
+    Player.PersonSlot1 -> Map("x" -> 480.0, "y" -> 480.0),
+    Player.PersonSlot2 -> Map("x" -> 480.0, "y" -> 430.0),
+    Player.PersonSlot3 -> Map("x" -> 430.0, "y" -> 480.0))
 
   val startPosition = if (slot == Player.Player1) { Player1Start } else { Player2Start }
 
@@ -51,6 +51,21 @@ case class Player(user: User,  slot: Int) {
           } else {
             m._2.y = person.y - max
           }
+        }
+
+        if (m._2.x < GameLoop.SceneGap || m._2.x > GameLoop.SceneGapW) {
+          m._2.x =
+            if (m._2.x < GameLoop.SceneGap)
+              GameLoop.SceneGap
+            else
+              GameLoop.SceneGapW
+        }
+        if (m._2.y < GameLoop.SceneGap || m._2.y > GameLoop.SceneGapH) {
+          m._2.y =
+            if (m._2.y < GameLoop.SceneGap)
+              GameLoop.SceneGap
+            else
+              GameLoop.SceneGapH
         }
       }
     }

@@ -181,11 +181,18 @@ angular.module( 'thorvarium.game', [
 .constant('MAX_DISTANCE', 120)
 .constant('MAX_SPEED', 30)
 
+.constant('SCREEN_GAP', 20)
+.constant('SCREEN_WIDTH', 500)
+.constant('SCREEN_HEIGHT', 500)
+
 .service('Game', function($rootScope, $window, Person, 
   CHOOSING, 
   RUNNING, 
   WAITING,
-  MAX_SPEED) {
+  MAX_SPEED,
+  SCREEN_GAP,
+  SCREEN_WIDTH,
+  SCREEN_HEIGHT) {
 
   this.id = null;
   this.players = [];
@@ -233,8 +240,8 @@ angular.module( 'thorvarium.game', [
 
     this.canvas = document.createElement("canvas");
     this.context = this.canvas.getContext("2d");
-    this.canvas.width = 500;
-    this.canvas.height = 500;
+    this.canvas.width = SCREEN_WIDTH;
+    this.canvas.height = SCREEN_HEIGHT;
 
     this.requestAnimationFrame = $window.requestAnimationFrame || 
       $window.webkitRequestAnimationFrame || 
@@ -373,6 +380,18 @@ angular.module( 'thorvarium.game', [
       y = e.pageY-$('.game-scenario canvas').offset().top;
     }
 
+    if (x < SCREEN_GAP || x > SCREEN_WIDTH - SCREEN_GAP) {
+      x = x < SCREEN_GAP ? 
+        angular.copy(SCREEN_GAP) : 
+        SCREEN_WIDTH - SCREEN_GAP;
+    }
+
+    if (y < SCREEN_GAP || y > SCREEN_HEIGHT - SCREEN_GAP) {
+      y = y < SCREEN_GAP ? 
+        angular.copy(SCREEN_GAP) : 
+        SCREEN_HEIGHT - SCREEN_GAP;
+    }
+
     that.mouseX = x;
     that.mouseY = y;
   };
@@ -485,7 +504,9 @@ angular.module( 'thorvarium.game', [
         this.context.fill();
       }
 
+      /* Need to thing better way to post this image over the circle
       this.context.drawImage(this.image, this.rx(), this.ry());
+      */
 
       this.context.fillStyle = !active ? '#fff' : '#ccc';
       this.context.beginPath();
@@ -535,16 +556,10 @@ angular.module( 'thorvarium.game', [
       this.moving = {x: xx, y: yy};
     },
     x: function() {
-      return this.person.x + this.middle();
+      return this.person.x;
     },
     y: function() {
-      return this.person.y + this.middle();
-    },
-    rx: function() {
-      return this.person.x - this.middle();
-    },
-    ry: function() {
-      return this.person.y - this.middle();
+      return this.person.y;
     },
     middle: function() {
       return this.size() / 2;
@@ -557,9 +572,7 @@ angular.module( 'thorvarium.game', [
     },
     clicked: function(x, y) {
       
-      var middle = this.middle();
       var radius = this.size();
-
       var dx = x - this.x(),
           dy = y - this.y(),
           dist = dx * dx + dy * dy;

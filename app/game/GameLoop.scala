@@ -61,8 +61,12 @@ object GameLoop {
   val WaitingInput = 1
   val Running = 2
 
-  val sceneWidth = 500
-  val sceneHeight = 500
+  val SceneWidth = 500
+  val SceneHeight = 500
+
+  val SceneGap = 20.0
+  val SceneGapW = SceneWidth - SceneGap
+  val SceneGapH = SceneHeight - SceneGap
 
   val MaxSpeed = 30.0 // 30 pixels per second
   val MaxDistance = 120.0
