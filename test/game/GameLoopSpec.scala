@@ -9,6 +9,8 @@ import play.api.libs.json.Json
 import play.api.test.PlaySpecification
 import session.SessionSpec
 
+import scala.util.control.Breaks._
+
 class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoSugar {
 
   trait GameLoopData extends Scope {
@@ -21,6 +23,7 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
     val testTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 100, "y" -> 100)))
     val testDistanceTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 400, "y" -> 400)))
+    val testInverseDistanceTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 20, "y" -> 20)))
   }
 
   "GameLoopTest" should {
@@ -48,12 +51,20 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       var lastTime = System.currentTimeMillis()
 
       while (gameTest.state == GameLoop.Running) {
+
         val current = System.currentTimeMillis()
+        val delta = current - lastTime
 
-        gameTest.reset()
-        gameTest.update((current - lastTime) / 1000)
+        breakable {
+          if (delta <= 0.0) {
+            break()
+          }
 
-        lastTime = current
+          gameTest.reset()
+          gameTest.update(delta.toDouble / 1000.0)
+
+          lastTime = current
+        }
       }
 
       p1.persons(Player.PersonSlot1).x.toInt must beEqualTo(100)
@@ -63,14 +74,24 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
     "must not move ship to a point that overcome the max distance of the person" in new GameLoopData {
 
       val gameTest = new GameLoop(Set(player1, player2))
-      var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
 
+      var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
       val person1 = p1.persons(Player.PersonSlot1)
       val maxDistance = (GameLoop.MaxDistance / 100) * person1.distance
 
       p1.input = GamingSet.toTurnSet(testDistanceTurnSet)
       p1.input.movements(Player.PersonSlot1).x must beEqualTo(20 + maxDistance)
       p1.input.movements(Player.PersonSlot1).y must beEqualTo(20 + maxDistance)
+
+      // Inverse
+
+      var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
+      val person2 = p2.persons(Player.PersonSlot1)
+      val maxDistance2 = (GameLoop.MaxDistance / 100) * person2.distance
+
+      p2.input = GamingSet.toTurnSet(testInverseDistanceTurnSet)
+      p2.input.movements(Player.PersonSlot1).x must beEqualTo(450 - maxDistance)
+      p2.input.movements(Player.PersonSlot1).y must beEqualTo(450 - maxDistance)
     }
   }
 }

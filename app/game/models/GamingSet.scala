@@ -41,8 +41,8 @@ object GamingSet {
     if (personsJs.size > 0) {
 
       val moves = personsJs.map { js =>
-        val x : Double = (js._2 \ "x").asOpt[Double].getOrElse(0)
-        val y : Double = (js._2 \ "y").asOpt[Double].getOrElse(0)
+        val x : Double = (js._2 \ "x").asOpt[Double].getOrElse(0.0)
+        val y : Double = (js._2 \ "y").asOpt[Double].getOrElse(0.0)
         js._1 -> new GamingMove(x, y)
       }.toMap
 

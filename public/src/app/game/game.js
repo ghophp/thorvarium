@@ -48,11 +48,14 @@ angular.module( 'thorvarium.game', [
   };
 
   $scope.turn = function() {
-    $rootScope.ws.send(JSON.stringify({
+    var turnData = JSON.stringify({
       "type": "input", 
       "persons": Game.input()
-    }));
+    });
 
+    console.log(turnData);
+
+    $rootScope.ws.send(turnData);
     $scope.waiting = true;
   };
 

@@ -35,12 +35,22 @@ case class Player(user: User,  slot: Int) {
 
         val person = persons(m._1)
         val max = (GameLoop.MaxDistance / 100) * person.distance
+        val distX = person.x - m._2.x
+        val distY = person.y - m._2.y
 
-        if (m._2.x > person.x + max) {
-          m._2.x = person.x + max
+        if (Math.abs(distX) > max) {
+          if (distX < 0) {
+            m._2.x = person.x + max
+          } else {
+            m._2.x = person.x - max
+          }
         }
-        if (m._2.y > person.y + max) {
-          m._2.y = person.x + max
+        if (Math.abs(distY) > max) {
+          if (distY < 0) {
+            m._2.y = person.y + max
+          } else {
+            m._2.y = person.y - max
+          }
         }
       }
     }
