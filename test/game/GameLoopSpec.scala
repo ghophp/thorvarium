@@ -9,7 +9,6 @@ import play.api.libs.json.Json
 import play.api.test.PlaySpecification
 import session.SessionSpec
 
-import scala.util.control.Breaks._
 
 class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoSugar {
 
@@ -27,6 +26,9 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
     val testBoardTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 5, "y" -> 5)))
     val testBoardInvertTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 495, "y" -> 495)))
+
+    val testHitTurnSet = Json.obj("persons" -> Json.obj("person1" ->
+      Json.obj("x" -> 25, "y" -> 25, "weapon1" -> Json.obj("x" -> 25, "y" -> 25))))
   }
 
   "GameLoopTest" should {
@@ -50,25 +52,7 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
       p1.input = GamingSet.toTurnSet(testTurnSet)
 
-      gameTest.state = GameLoop.Running
-      var lastTime = System.currentTimeMillis()
-
-      while (gameTest.state == GameLoop.Running) {
-
-        val current = System.currentTimeMillis()
-        val delta = current - lastTime
-
-        breakable {
-          if (delta <= 0.0) {
-            break()
-          }
-
-          gameTest.reset()
-          gameTest.update(delta.toDouble / 1000.0)
-
-          lastTime = current
-        }
-      }
+      gameTest.loop()
 
       p1.persons(Player.PersonSlot1).x.toInt must beEqualTo(100)
       p1.persons(Player.PersonSlot1).y.toInt must beEqualTo(100)
@@ -118,6 +102,19 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       p2.input = GamingSet.toTurnSet(testBoardInvertTurnSet)
       p2.input.movements(Player.PersonSlot1).x must beEqualTo(GameLoop.SceneGapW)
       p2.input.movements(Player.PersonSlot1).y must beEqualTo(GameLoop.SceneGapH)
+    }
+
+    "must hit player ship" in new GameLoopData {
+
+      val gameTest = new GameLoop(Set(player1, player2))
+
+      var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
+      p1.input = GamingSet.toTurnSet(testHitTurnSet)
+
+      gameTest.loop()
+
+      var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
+      p2.persons(Player.PersonSlot1).life must beEqualTo(25)
     }
   }
 }

@@ -13,10 +13,6 @@ case class Weapon(id: Option[Long] = None,
                   power: Int,
                   size: Int) {
 
-  val SingleShot = 1
-  val TripleShot = 2
-  val Barrier = 3
-
   def toJson = {
     Json.obj(
       "id" -> id.get,
@@ -29,6 +25,10 @@ case class Weapon(id: Option[Long] = None,
 }
 
 object Weapon {
+
+  val SingleShot = 1
+  val TripleShot = 2
+  val Barrier = 3
 
   private val parser : RowParser[Weapon] = {
     get[Option[Long]]("id") ~

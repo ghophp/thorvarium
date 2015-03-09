@@ -8,7 +8,7 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 
 case class Person(id: Option[Long] = None,
                   name: String,
-                  life: Int,
+                  var life: Double,
                   speed: Int,
                   size: Int,
                   distance: Int,

@@ -9,7 +9,6 @@ import game.models.GamingSet
 import models.{Weapon, Person, Player, User}
 import org.joda.time.DateTime
 import scala.concurrent.duration._
-import util.control.Breaks._
 
 class GameActor(id: String) extends Actor with ActorLogging {
 
@@ -88,27 +87,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
       if (gameLoop != null && stepTimer != null) {
 
         stepTimer.cancel()
-        gameLoop.state = GameLoop.Running
 
         log.info("== Game turn start ==")
-
-        var lastTime = System.currentTimeMillis()
-        while (gameLoop.state == GameLoop.Running) {
-
-          val current = System.currentTimeMillis()
-          val delta = current - lastTime
-
-          breakable {
-            if (delta <= 0.0) {
-              break()
-            }
-
-            gameLoop.reset()
-            gameLoop.update(delta.toDouble / 1000.0)
-
-            lastTime = current
-          }
-        }
+        gameLoop.loop()
 
         readyToTurn = 0
         gameLoop.newTurn()
