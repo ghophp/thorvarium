@@ -93,6 +93,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
         log.info("== Game turn start ==")
         gameLoop.loop()
+        log.info("== Game turn end ==")
 
         readyToTurn = 0
         gameLoop.newTurn()

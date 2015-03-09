@@ -143,6 +143,12 @@ angular.module( 'thorvarium.game.loop', [
             hasAction = true;
           }
         });
+        _.each(i.weapons, function(weapon, key) {
+          var curr = pl.persons[key];
+          if (angular.isDefined(curr)) {
+            curr.shot = null;
+          }
+        });
       }
     });
 

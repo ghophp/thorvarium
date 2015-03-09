@@ -14,6 +14,7 @@ class GameLoop(var players : Set[Player]) {
   var bullets = Set[GamingBullet]()
 
   def loop() = {
+
     state = GameLoop.Running
     parseWeapons()
 
@@ -45,7 +46,7 @@ class GameLoop(var players : Set[Player]) {
     players.map { p =>
       if (p.input != null) {
         applyMovements(p, elapsed)
-        applyBullets(elapsed)
+        //applyBullets(elapsed)
       }
     }
 
