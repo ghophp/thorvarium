@@ -220,7 +220,7 @@ angular.module( 'thorvarium.game.loop', [
             active.movement = angular.copy(active.moving);
             active.moving = null;
           } else if (active.shot === null) {
-            active.shot = angular.copy(active.aiming);
+            active.shot = _.extend(angular.copy(active.aiming), {slot: active.weapon});
             active.aiming = null;
           }
 
@@ -268,8 +268,16 @@ angular.module( 'thorvarium.game.loop', [
   this.input = function() {
     var persons = {};
     _.each(this.me().persons, function(person, key) {
+      var actions = {};
       if (person.movement !== null) {
-        persons[key] = angular.copy(person.movement);
+				actions = _.extend(actions, angular.copy(person.movement));
+      }
+      if (person.shot !== null) {
+				actions = _.extend(actions, {'weapon': angular.copy(person.shot)});
+      }
+
+      if (_.keys(actions).length > 0) {
+				persons[key] = actions;
       }
     });
 

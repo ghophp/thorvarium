@@ -123,8 +123,8 @@ class GameLoop(var players : Set[Player]) {
         p.input.weapons.map { m =>
 
           val person = p.persons(m._1)
-          m._2.filter(_._2 != null).map { w =>
-
+          if (m._2 != null) {
+            val w = m._2
             val weapon = person.weapons(w._1)
             if (weapon.kind == Weapon.SingleShot) {
 

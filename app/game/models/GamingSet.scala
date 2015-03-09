@@ -4,7 +4,7 @@ import models.{Person, Player}
 import play.api.libs.json.{Json, JsObject, JsValue}
 
 class GamingSet(var movements : Map[String, GamingMove],
-                val weapons: Map[String, Map[String, GamingWeapon]]) {
+                val weapons: Map[String, (String, GamingWeapon)]) {
   def toJson = {
     Json.obj(
       "movements" -> (
@@ -16,8 +16,7 @@ class GamingSet(var movements : Map[String, GamingMove],
       "weapons" -> (
         if (weapons != null)
           Json.toJson(weapons.map( p =>
-            p._1 -> Json.toJson(p._2.map( o =>
-              o._1 -> (if (o._2 != null) o._2.toJson else Json.obj()) ))
+            p._1 -> (if (p._2 != null) Json.obj(p._2._1 -> p._2._2.toJson) else Json.obj())
           ))
         else
           Json.obj()
@@ -35,11 +34,8 @@ object GamingSet {
    *       "person1": {
    *         "x": 0,
    *         "y": 0,
-   *         "weapon1": {
-   *           "x": 0,
-   *           "y": 0
-   *         },
-   *         "weapon2": {
+   *         "weapon": {
+   *           "id": 1,
    *           "x": 0,
    *           "y": 0
    *         }
@@ -66,21 +62,23 @@ object GamingSet {
 
       val weapons = personsJs.map { js =>
 
-        val w1 = (js._2 \ Person.WeaponSlot1).asOpt[JsObject]
-        val w2 = (js._2 \ Person.WeaponSlot2).asOpt[JsObject]
+        val w = (js._2 \ "weapon").asOpt[JsObject]
+        var wp : (String, GamingWeapon) = null
 
-        def xy(o:Option[JsObject]) : GamingWeapon = {
-          if (o.isDefined) {
-            val x : Double = (o.get \ "x").asOpt[Double].getOrElse(0)
-            val y : Double = (o.get \ "y").asOpt[Double].getOrElse(0)
-            new GamingWeapon(x, y)
-          } else null
+        w match {
+          case Some(o) =>
+            val slot : String = (w.get \ "slot").asOpt[String].getOrElse("")
+            if (!slot.isEmpty && Person.WeaponSlots.contains(slot)) {
+              val x : Double = (w.get \ "x").asOpt[Double].getOrElse(0)
+              val y : Double = (w.get \ "y").asOpt[Double].getOrElse(0)
+              wp = slot -> new GamingWeapon(x, y)
+            }
+          case None => wp = null
         }
 
-        js._1 -> Map(Person.WeaponSlot1 -> xy(w1), Person.WeaponSlot2 -> xy(w2))
+        js._1 -> wp
 
-      }.toMap[String, Map[String, GamingWeapon]]
-
+      }.toMap[String, (String, GamingWeapon)]
       return new GamingSet(moves, weapons)
     }
 

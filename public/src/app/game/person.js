@@ -19,6 +19,9 @@ angular.module( 'thorvarium.game.person', [
     this.aiming = null;
 
     this.to = null;
+
+    // active weapon - TODO: make dynamic
+    this.weapon = 'weapon1';
   }
 
   Person.prototype = {

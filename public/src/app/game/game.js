@@ -94,20 +94,20 @@ angular.module( 'thorvarium.game', [
     "person1": {
       "id": 2,
       "name": "Person 1",
-      "weapon1": 2,
-      "weapon2": 2
+      "weapon1": 1,
+      "weapon2": 1
     },
     "person2": {
       "id": 2,
       "name": "Person 2",
-      "weapon1": 2,
-      "weapon2": 2
+      "weapon1": 1,
+      "weapon2": 1
     },
     "person3": {
       "id": 2,
       "name": "Person 3",
-      "weapon1": 2,
-      "weapon2": 2
+      "weapon1": 1,
+      "weapon2": 1
     }
   };
 

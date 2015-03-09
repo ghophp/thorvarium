@@ -12,5 +12,3 @@ I homage @Olifiers (Henrique Olifers), a very talented developer that brought a 
 =======
 
 * Remove password from JSON
-* Move on the client and on the server parallel, then authority with server
-

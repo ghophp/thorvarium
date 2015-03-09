@@ -28,7 +28,7 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
     val testBoardInvertTurnSet = Json.obj("persons" -> Json.obj("person1" -> Json.obj("x" -> 495, "y" -> 495)))
 
     val testHitTurnSet = Json.obj("persons" -> Json.obj("person1" ->
-      Json.obj("x" -> 25, "y" -> 25, "weapon1" -> Json.obj("x" -> 25, "y" -> 25))))
+      Json.obj("x" -> 25, "y" -> 25, "weapon" -> Json.obj("slot" -> "weapon1", "x" -> 25, "y" -> 25))))
   }
 
   "GameLoopTest" should {
