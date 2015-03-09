@@ -1,5 +1,9 @@
 package game.models
 
-class GamingWeapon(val x : Double, val y : Double) {
+import play.api.libs.json.Json
 
+class GamingWeapon(val x : Double, val y : Double) {
+  def toJson = {
+    Json.obj("x" -> x, "y" -> y)
+  }
 }

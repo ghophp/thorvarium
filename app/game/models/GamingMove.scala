@@ -1,5 +1,9 @@
 package game.models
 
-class GamingMove(var x: Double, var y: Double) {
+import play.api.libs.json.Json
 
- }
+class GamingMove(var x: Double, var y: Double) {
+  def toJson = {
+    Json.obj("x" -> x, "y" -> y)
+  }
+}

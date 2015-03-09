@@ -1,0 +1,113 @@
+angular.module( 'thorvarium.game', [
+  'ui.router'
+])
+
+.config(function config( $stateProvider ) {
+  $stateProvider.state( 'game', {
+    url: '/game',
+    views: {
+      "main": {
+        controller: 'GameCtrl',
+        templateUrl: 'game/game.tpl.html'
+      }
+    },
+    data:{ pageTitle: 'Chat' }
+  });
+})
+
+.controller( 'GameCtrl', function GameController( $rootScope, $scope, $timeout, Game ) {
+
+  $scope.startTimer = function() {
+    $scope.countdown = 40;
+    if ($scope.stepTimer !== null) {
+      $timeout.cancel($scope.stepTimer);
+    }
+    $scope.stepTimer = $timeout($scope.onTimeout, 1000);
+  };
+
+  $scope.onTimeout = function() {
+    if($scope.countdown ===  0) {
+        $timeout.cancel($scope.stepTimer);
+        return;
+    }
+
+    $scope.countdown--;
+    $scope.stepTimer = $timeout($scope.onTimeout, 1000);
+  };
+
+  $scope.stopTimer = function() {
+    $scope.countdown = 40;
+    $timeout.cancel($scope.stepTimer);
+  };
+
+  $scope.endGame = function(message) {
+    Game.destroy();
+    $rootScope.ws = null;
+    $scope.go('/chat');
+    alert(message);
+  };
+
+  $scope.turn = function() {
+    var input = Game.input();
+    var players = _.map(turnDebug.players, function(p) {
+
+      if (p.user.id === $rootScope.user.id) {
+        p.persons = _.mapObject(p.persons, function(pe, key) {
+          var o = input[key];
+          if (typeof o !== 'undefined') {
+            pe.x = o.x;
+            pe.y = o.y;
+          }
+
+          return pe;
+        });
+      }
+
+      return p;
+    });
+
+    Game.turn(players);
+  };
+
+  $scope.options = function() {
+    
+    var slots = _.filter($scope.slots, function(slot) {
+      return slot.id > 0 && slot.weapon1 > 0 && slot.weapon2 > 0;
+    });
+
+    if (slots.length >= 3) {
+      
+      $rootScope.ws.send(JSON.stringify({
+        "type": "options", 
+        "persons": angular.copy($scope.slots)
+      }));
+
+      $scope.ready = true;
+
+    } else {
+      alert('Please select your persons and weapons...');
+    }
+  };
+
+  $scope.$on('choosing', function() {
+    Game.turnStart();
+  });
+
+  var createDebug = $.parseJSON('{"type":"game","id":"1-2","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{}}],"persons":[{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":100,"x":0.0,"y":0.0,"weapons":{}},{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":0.0,"y":0.0,"weapons":{}},{"id":3,"name":"Big","life":100,"speed":50,"size":100,"distance":50,"x":0.0,"y":0.0,"weapons":{}}],"weapons":[{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100},{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},{"id":3,"name":"Barrier","kind":3,"speed":0,"power":100,"size":0}],"now":1425729423402}');
+  var startDebug = $.parseJSON('{"type":"game_ready","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":90,"x":20.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":3,"name":"Medium","life":100,"speed":60,"size":100,"distance":50,"x":20.0,"y":70.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":70.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}}}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":400.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":400.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33}}}}}],"now":1425729434723}');
+  var turnDebug = $.parseJSON('{"type":"game_ready","players":[{"user":{"id":1,"nickname":"test","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":1,"name":"Small","life":50,"speed":100,"size":60,"distance":90,"x":20.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":3,"name":"Medium","life":100,"speed":60,"size":100,"distance":50,"x":20.0,"y":70.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":70.0,"y":20.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}}}},{"user":{"id":2,"nickname":"test2","password":"4297f44b13955235245b2497399d7a93"},"persons":{"person1":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person2":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":450.0,"y":400.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":1,"name":"Single Shot","kind":1,"speed":80,"power":50,"size":100}}},"person3":{"id":2,"name":"Medium","life":70,"speed":70,"size":80,"distance":70,"x":400.0,"y":450.0,"weapons":{"weapon1":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33},"weapon2":{"id":2,"name":"Triple Shot","kind":2,"speed":100,"power":25,"size":33}}}}}],"now":1425729434723}');
+
+  $scope.ready = true;
+  $scope.gaming = true;
+
+  Game.create(createDebug.id, 
+    createDebug.persons, 
+    createDebug.weapons, 
+    createDebug.now);
+
+  $scope.countdown = 40;
+  Game.start(startDebug.players);
+  $scope.startTimer();
+})
+
+;

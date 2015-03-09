@@ -85,8 +85,11 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
     case TurnEnd if sender == self =>
       if (gameLoop != null && stepTimer != null) {
-
         stepTimer.cancel()
+
+        players.map { _._2 ! PreTurn(gameLoop.players.map { p =>
+          p.user.id.get.toString -> p.input
+        }.toMap) }
 
         log.info("== Game turn start ==")
         gameLoop.loop()
@@ -94,9 +97,8 @@ class GameActor(id: String) extends Actor with ActorLogging {
         readyToTurn = 0
         gameLoop.newTurn()
 
-        players.map { _._2 ! TurnReady(
+        players.map { _._2 ! AfterTurn(
           players.map(_._1).toSet,
-          DateTime.now().getMillis,
           gameLoop.turns) }
       }
 
@@ -152,7 +154,8 @@ case class StartGame(id : String,
 
 case class PlayerSet(user: Long, persons: Map[String, Person])
 case class GameReady(players: Set[Player], now: Long)
-case class TurnReady(players: Set[Player], now: Long, turns: Int)
+case class PreTurn(inputs: Map[String, GamingSet])
+case class AfterTurn(players: Set[Player], turns: Int)
 case class PlayerTurnSet(user: Long, input: GamingSet)
 
 object TurnStart

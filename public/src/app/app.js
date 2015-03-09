@@ -4,6 +4,8 @@ angular.module( 'thorvarium', [
   'thorvarium.home',
   'thorvarium.login',
   'thorvarium.chat',
+  'thorvarium.game.person',
+  'thorvarium.game.loop',
   'thorvarium.game',
   'ui.bootstrap',
   'ui.router'

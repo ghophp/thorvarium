@@ -72,14 +72,20 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "players" -> r.players.map(u => u.toJson),
         "now" -> r.now)
 
-    case r:TurnReady if sender == game =>
+    case r:PreTurn if sender == game =>
       out ! Json.obj(
-        "type" -> "turn_ready",
+        "type" -> "pre_turn",
+        "inputs" -> Json.toJson(r.inputs.map { p =>
+          p._1 -> (if (p._2 != null) p._2.toJson else Json.obj())
+        }))
+
+    case r:AfterTurn if sender == game =>
+      out ! Json.obj(
+        "type" -> "after_turn",
         "players" -> r.players.map(u => u.toJson),
-        "now" -> r.now,
         "turns" -> r.turns)
 
-    case TurnStart =>
+    case TurnStart if sender == game =>
       out ! Json.obj("type" -> "turn_start")
 
     case NothingSelected if sender == game =>

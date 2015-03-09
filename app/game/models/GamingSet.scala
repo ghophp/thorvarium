@@ -1,11 +1,29 @@
 package game.models
 
 import models.{Person, Player}
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.{Json, JsObject, JsValue}
 
 class GamingSet(var movements : Map[String, GamingMove],
                 val weapons: Map[String, Map[String, GamingWeapon]]) {
-
+  def toJson = {
+    Json.obj(
+      "movements" -> (
+        if (movements != null)
+          Json.toJson(movements.map( p => p._1 -> p._2.toJson ))
+        else
+          Json.obj()
+        ),
+      "weapons" -> (
+        if (weapons != null)
+          Json.toJson(weapons.map( p =>
+            p._1 -> Json.toJson(p._2.map( o =>
+              o._1 -> (if (o._2 != null) o._2.toJson else Json.obj()) ))
+          ))
+        else
+          Json.obj()
+        )
+    )
+  }
 }
 
 object GamingSet {
