@@ -8,25 +8,33 @@ angular.module( 'thorvarium.game.loop', [
 
 .constant('MAX_SIZE', 17)
 .constant('MAX_DISTANCE', 120)
-.constant('MAX_SPEED', 30)
+.constant('MAX_SPEED', 40)
 
 .constant('SCREEN_GAP', 20)
 .constant('SCREEN_WIDTH', 500)
 .constant('SCREEN_HEIGHT', 500)
 
-.service('Game', function($rootScope, $window, Person, 
+.constant('MAX_BULLET_SPEED', 200)
+.constant('MAX_BULLET_POWER', 25)
+.constant('MAX_BULLET_SIZE', 5)
+
+.service('Game', function($rootScope, $window, Person, Bullet, 
   CHOOSING, 
   RUNNING, 
   WAITING,
   MAX_SPEED,
   SCREEN_GAP,
   SCREEN_WIDTH,
-  SCREEN_HEIGHT) {
+  SCREEN_HEIGHT,
+  MAX_BULLET_SPEED,
+  MAX_BULLET_POWER,
+  MAX_BULLET_SIZE) {
 
   this.id = null;
   this.players = [];
   this.persons = [];
   this.weapons = [];
+  this.bullets = [];
   this.now = null;
   this.then = null;
   this.canvas = null;
@@ -39,7 +47,7 @@ angular.module( 'thorvarium.game.loop', [
   this.state = null;
   this.requestAnimationFrame = null;
 
-	this.serverState = null;
+  this.serverState = null;
 
   this.create = function(id, persons, weapons, now) {
     this.id = id;
@@ -53,6 +61,7 @@ angular.module( 'thorvarium.game.loop', [
     this.players = [];
     this.persons = [];
     this.weapons = [];
+    this.bullets = [];
     this.now = null;
     this.canvas = null;
     this.context = null;
@@ -63,7 +72,7 @@ angular.module( 'thorvarium.game.loop', [
     this.mouseX = 0;
     this.mouseY = 0;
     this.requestAnimationFrame = null;
-		this.serverState = null;
+    this.serverState = null;
   };
 
   this.start = function(players) {
@@ -102,8 +111,9 @@ angular.module( 'thorvarium.game.loop', [
   };
 
   this.normalize = function(players) {
-	var that = this;
-	_.each(players, function(p) {
+    var that = this;
+    that.bullets = [];
+    _.each(players, function(p) {
 
       var pl = _.find(that.players, function(o) {
         return o.user.id == p.user.id;
@@ -116,6 +126,7 @@ angular.module( 'thorvarium.game.loop', [
             curr.person.life = person.life;
             curr.person.x = person.x;
             curr.person.y = person.y;
+            curr.to = null;
           }
         });
       }
@@ -127,7 +138,6 @@ angular.module( 'thorvarium.game.loop', [
     var that = this;
     var hasAction = false;
 
-    console.log(inputs);
     _.each(inputs, function(i, iKey) {
 
       var pl = _.find(that.players, function(o) {
@@ -144,9 +154,35 @@ angular.module( 'thorvarium.game.loop', [
           }
         });
         _.each(i.weapons, function(weapon, key) {
+          
           var curr = pl.persons[key];
+          curr.shot = null;
+
           if (angular.isDefined(curr)) {
-            curr.shot = null;
+            _.each(weapon, function(w, wk) {
+              
+              var currw = curr.person.weapons[wk];
+              if (angular.isDefined(currw)) {
+                
+                var angle = Math.atan2(w.y - curr.person.y, w.x - curr.person.x);
+                var speed = (MAX_BULLET_SPEED / 100.0) * currw.speed;
+                var power = (MAX_BULLET_POWER / 100.0) * currw.power;
+                var size = (MAX_BULLET_SIZE / 100.0) * currw.size;
+
+                that.bullets.push(new Bullet(
+                  pl,
+                  curr,
+                  currw,
+                  angle,
+                  speed,
+                  power,
+                  size,
+                  curr.person.x,
+                  curr.person.y,
+                  that.context));
+              }
+            });          
+            hasAction = true;
           }
         });
       }
@@ -160,17 +196,15 @@ angular.module( 'thorvarium.game.loop', [
   };
 
   this.waitForTurn = function() {
-
-		if (this.serverState !== null) {
-			this.normalize(this.serverState);
-		}
-
+    if (this.serverState !== null) {
+      this.normalize(this.serverState);
+    }
     this.state = WAITING;
     $rootScope.$broadcast("choosing");
   };
 
   this.turnStart = function() {
-		this.serverState = null;
+    this.serverState = null;
     this.state = CHOOSING;
   };
 
@@ -276,14 +310,14 @@ angular.module( 'thorvarium.game.loop', [
     _.each(this.me().persons, function(person, key) {
       var actions = {};
       if (person.movement !== null) {
-				actions = _.extend(actions, angular.copy(person.movement));
+        actions = _.extend(actions, angular.copy(person.movement));
       }
       if (person.shot !== null) {
-				actions = _.extend(actions, {'weapon': angular.copy(person.shot)});
+        actions = _.extend(actions, {'weapon': angular.copy(person.shot)});
       }
 
       if (_.keys(actions).length > 0) {
-				persons[key] = actions;
+        persons[key] = actions;
       }
     });
 
@@ -293,9 +327,21 @@ angular.module( 'thorvarium.game.loop', [
 
   this.update = function (elapsed) {
     
+    var that = this;
     var hasAction = false;
+    var collided = [];
+    
     _.each(this.players, function(player) {
       _.each(player.persons, function(p, key) {
+
+        // collisions
+        _.each(that.bullets, function(b) {
+          if (b.person !== p && b.collided(p)) {
+            p.life -= b.power;
+            collided.push(b);
+          }
+        });
+
         if (p.to !== null) {
 
           var angle = Math.atan2(p.to.y - p.person.y, p.to.x - p.person.x);
@@ -322,6 +368,21 @@ angular.module( 'thorvarium.game.loop', [
       });
     });
 
+    this.bullets = _.difference(this.bullets, collided);
+    _.each(this.bullets, function(b) {
+      
+      var speed = b.speed * elapsed;
+      if (b.x > 0 && b.x < SCREEN_WIDTH) {
+        b.x = b.x + (Math.cos(b.angle) * speed);
+        hasAction = true;
+      }
+
+      if (b.y > 0 && b.y < SCREEN_HEIGHT) {
+        b.y = b.y + (Math.sin(b.angle) * speed);
+        hasAction = true;
+      }
+    });
+
     if (!hasAction) {
       this.waitForTurn();
     }
@@ -345,6 +406,10 @@ angular.module( 'thorvarium.game.loop', [
           }
         }
       });
+    });
+
+    _.each(this.bullets, function(bullet) {
+      bullet.draw();
     });
   };
 

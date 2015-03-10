@@ -12,6 +12,7 @@ class GameLoop(var players : Set[Player]) {
   var turns = 0
 
   var bullets = Set[GamingBullet]()
+  var collisions = Set[GamingBullet]()
 
   def loop() = {
 
@@ -44,10 +45,11 @@ class GameLoop(var players : Set[Player]) {
   def update(elapsed : Double) = {
 
     players.map { p =>
+      applyCollisions(p.persons)
       if (p.input != null) {
         applyMovements(p, elapsed)
-        //applyBullets(elapsed)
       }
+      applyBullets(elapsed)
     }
 
     if (steps <= 0) {
@@ -81,40 +83,34 @@ class GameLoop(var players : Set[Player]) {
     }
   }
 
+  def applyCollisions(persons: Map[String, Person]) = {
+    persons.map { p =>
+      bullets.map { b =>
+        if (p._2 != b.person && b.collided(p._2)) {
+          p._2.life -= b.power
+          collisions += b
+        }
+      }
+    }
+    bullets --= collisions
+  }
+
   def applyBullets(elapsed : Double) = {
     bullets.map { b =>
 
       val speed = b.speed * elapsed
-      if (b.x > 0 || b.x < GameLoop.SceneWidth) {
+      if (b.x > 0 && b.x < GameLoop.SceneWidth) {
         b.x = b.x + (Math.cos(b.angle) * speed)
         steps += 1
       }
 
-      if (b.y > 0 || b.y < GameLoop.SceneHeight) {
+      if (b.y > 0 && b.y < GameLoop.SceneHeight) {
         b.y = b.y + (Math.sin(b.angle) * speed)
         steps += 1
       }
 
-      val collided = collide(b)
-      if (collided != null) {
-        collided.life -= b.power
-        bullets -= b
-      }
+      println("bullets " + b.x + " " + b.y)
     }
-  }
-
-  def collide(b : GamingBullet) : Person = {
-    var person : Person = null
-    players.map { p =>
-      p.persons.find { pr =>
-        val size = (GameLoop.MaxSize / 100.0) * pr._2.size
-        circleCollision(b.x, b.y, b.size, pr._2.x, pr._2.y, size)
-      } match {
-        case Some(o) => person = o._2
-        case None => person = null
-      }
-    }
-    person
   }
 
   def parseWeapons() = {
@@ -143,17 +139,10 @@ class GameLoop(var players : Set[Player]) {
     }
   }
 
-  def circleCollision(c1x : Double, c1y : Double, c1r : Double,
-                      c2x : Double, c2y : Double, c2r : Double) : Boolean = {
-    val dx = c2x - c1x
-    val dy = c2y - c1y
-    val rs = c1r + c2r
-    dx*dx+dy*dy <= rs*rs
-  }
-
   def newTurn() = {
     turns += 1
     players.map { _.input = null }
+    collisions = Set()
   }
 }
 
@@ -172,7 +161,7 @@ object GameLoop {
   val MaxDistance = 120.0
   val MaxSize = 17
 
-  val MaxBulletSpeed = 60.0
+  val MaxBulletSpeed = 200.0
   val MaxBulletPower = 25.0
   val MaxBulletSize = 5.0
 }
