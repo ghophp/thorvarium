@@ -108,8 +108,6 @@ class GameLoop(var players : Set[Player]) {
         b.y = b.y + (Math.sin(b.angle) * speed)
         steps += 1
       }
-
-      println("bullets " + b.x + " " + b.y)
     }
   }
 
