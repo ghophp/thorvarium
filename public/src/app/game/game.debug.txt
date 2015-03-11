@@ -73,6 +73,10 @@ angular.module( 'thorvarium.game', [
     }
   };
 
+  $scope.$on('loaded', function() {
+    $scope.players = Game.players;
+  });
+
   $scope.$on('choosing', function() {
     Game.turnStart();
   });

@@ -8,7 +8,10 @@ angular.module( 'thorvarium.game.person', [
 .factory('Person', function (MOVE_INDICATOR, SHOT_INDICATOR, MAX_SIZE, MAX_DISTANCE) {
  
   function Person(person, image, context) {
+    
     this.person = person;
+    this.person.full = angular.copy(person.life);
+
     this.image = image;
     this.context = context;
     
@@ -25,6 +28,9 @@ angular.module( 'thorvarium.game.person', [
   }
 
   Person.prototype = {
+    lifePercent: function() {
+      return Math.round((this.person.life / this.person.full) * 100);
+    },
     draw: function(active) {
       if (this.person.life > 0) {
 

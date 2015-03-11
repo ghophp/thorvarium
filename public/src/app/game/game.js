@@ -77,6 +77,10 @@ angular.module( 'thorvarium.game', [
     }
   };
 
+  $scope.$on('loaded', function() {
+    $scope.players = Game.players;
+  });
+
   $scope.$on('choosing', function() {
     $rootScope.ws.send(JSON.stringify({
       "type": "ready_to_turn"

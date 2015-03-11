@@ -56,7 +56,27 @@
 		<div class="col-xs-12 text-center"><label>Waiting for the other player...</label></div>
 	</div>
 
-	<div class="game-scenario text-center" ng-if="gaming"></div>
+	<div class="row" ng-if="gaming">
+		<div class="col-xs-3 game-stats">
+			<div class="player" ng-repeat="player in players">
+				<p>{{ player.user.nickname }}</p>
+				<div class="person" ng-repeat="person in player.persons">
+					<div class="person-name">{{ person.person.name }}</div>
+					<div class="person-life">
+						<progressbar ng-if="person.person.life > 0" 
+							class="progress-striped" 
+							value="person.person.life" 
+							max="person.person.full">{{ person.lifePercent() }}%</progressbar>
+						<span ng-if="person.person.life <= 0">Dead</span>
+					</div>
+				</div>	
+			</div>
+		</div>
+		<div class="col-xs-9">
+			<div class="game-scenario"></div>
+		</div>
+	</div>
+
 	<div class="row" ng-if="gaming">
 		<div class="col-xs-12 text-center">
 			<button class="btn btn-default" type="button" ng-click="turn()" ng-disabled="waiting">Ready!</button>

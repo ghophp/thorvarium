@@ -233,6 +233,8 @@ angular.module( 'thorvarium.game.loop', [
         $('.game-scenario canvas').click(that.interaction);
         $('.game-scenario canvas').mousemove(that.movement);
 
+        $rootScope.$broadcast("loaded");
+
         that.waitForTurn();
         that.main.call($window);
       });  
@@ -343,7 +345,7 @@ angular.module( 'thorvarium.game.loop', [
       _.each(player.persons, function(p, key) {
         _.each(that.bullets, function(b) {
           if (b.person !== p && b.collided(p)) {
-            p.life -= b.power;
+            p.person.life -= b.power;
             collided.push(b);
           }
         });
