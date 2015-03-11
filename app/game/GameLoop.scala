@@ -46,11 +46,15 @@ class GameLoop(var players : Set[Player]) {
 
     players.map { p =>
       applyCollisions(p.persons)
+    }
+
+    players.map { p =>
       if (p.input != null) {
         applyMovements(p, elapsed)
       }
-      applyBullets(elapsed)
     }
+
+    applyBullets(elapsed)
 
     if (steps <= 0) {
       state = GameLoop.WaitingInput
@@ -99,12 +103,10 @@ class GameLoop(var players : Set[Player]) {
     bullets.map { b =>
 
       val speed = b.speed * elapsed
-      if (b.x > 0 && b.x < GameLoop.SceneWidth) {
-        b.x = b.x + (Math.cos(b.angle) * speed)
-        steps += 1
-      }
+      if (b.x > 0 && b.x < GameLoop.SceneWidth &&
+        b.y > 0 && b.y < GameLoop.SceneHeight) {
 
-      if (b.y > 0 && b.y < GameLoop.SceneHeight) {
+        b.x = b.x + (Math.cos(b.angle) * speed)
         b.y = b.y + (Math.sin(b.angle) * speed)
         steps += 1
       }
@@ -155,9 +157,9 @@ object GameLoop {
   val SceneGapW = SceneWidth - SceneGap
   val SceneGapH = SceneHeight - SceneGap
 
-  val MaxSpeed = 30.0 // 30 pixels per second
+  val MaxSpeed = 40.0 // 30 pixels per second
   val MaxDistance = 120.0
-  val MaxSize = 17
+  val MaxSize = 17.0
 
   val MaxBulletSpeed = 200.0
   val MaxBulletPower = 25.0

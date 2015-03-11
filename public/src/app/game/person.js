@@ -26,51 +26,52 @@ angular.module( 'thorvarium.game.person', [
 
   Person.prototype = {
     draw: function(active) {
+      if (this.person.life > 0) {
 
-      this.context.save();
+        this.context.save();
+        if (this.movement !== null) {
 
-      if (this.movement !== null) {
+          this.context.strokeStyle = 'rgba(255, 200, 255, 0.5)';
+          this.context.beginPath();
+          this.context.moveTo(this.movement.x, this.movement.y);
+          this.context.lineTo(this.x(),this.y());
+          this.context.stroke();
 
-        this.context.strokeStyle = 'rgba(255, 200, 255, 0.5)';
+          this.context.fillStyle = 'rgba(255, 200, 255, 0.5)';
+          this.context.beginPath();
+          this.context.arc(this.movement.x, this.movement.y, MOVE_INDICATOR, 0, Math.PI * 2, true);
+          this.context.closePath();
+          this.context.fill();
+        }
+
+        if (this.shot !== null) {
+
+          this.context.strokeStyle = 'rgba(200, 200, 255, 0.5)';
+          this.context.beginPath();
+          this.context.moveTo(this.shot.x, this.shot.y);
+          this.context.lineTo(this.x(),this.y());
+          this.context.stroke();
+
+          this.context.fillStyle = 'rgba(200, 200, 255, 0.5)';
+          this.context.beginPath();
+          this.context.arc(this.shot.x, this.shot.y, SHOT_INDICATOR, 0, Math.PI * 2, true);
+          this.context.closePath();
+          this.context.fill();
+        }
+
+        /* Need to thing better way to post this image over the circle
+        this.context.drawImage(this.image, this.rx(), this.ry());
+        */
+
+        this.context.fillStyle = !active ? '#fff' : '#ccc';
         this.context.beginPath();
-        this.context.moveTo(this.movement.x, this.movement.y);
-        this.context.lineTo(this.x(),this.y());
-        this.context.stroke();
-
-        this.context.fillStyle = 'rgba(255, 200, 255, 0.5)';
-        this.context.beginPath();
-        this.context.arc(this.movement.x, this.movement.y, MOVE_INDICATOR, 0, Math.PI * 2, true);
+        this.context.arc(this.x(), this.y(), this.size(), 0, Math.PI * 2, true);
         this.context.closePath();
         this.context.fill();
-      }
 
-      if (this.shot !== null) {
-
-        this.context.strokeStyle = 'rgba(200, 200, 255, 0.5)';
-        this.context.beginPath();
-        this.context.moveTo(this.shot.x, this.shot.y);
-        this.context.lineTo(this.x(),this.y());
-        this.context.stroke();
-
-        this.context.fillStyle = 'rgba(200, 200, 255, 0.5)';
-        this.context.beginPath();
-        this.context.arc(this.shot.x, this.shot.y, SHOT_INDICATOR, 0, Math.PI * 2, true);
         this.context.closePath();
-        this.context.fill();
+        this.context.restore();
       }
-
-      /* Need to thing better way to post this image over the circle
-      this.context.drawImage(this.image, this.rx(), this.ry());
-      */
-
-      this.context.fillStyle = !active ? '#fff' : '#ccc';
-      this.context.beginPath();
-      this.context.arc(this.x(), this.y(), this.size(), 0, Math.PI * 2, true);
-      this.context.closePath();
-      this.context.fill();
-
-      this.context.closePath();
-      this.context.restore();
     },
     move: function(x, y) {
 
@@ -155,13 +156,13 @@ angular.module( 'thorvarium.game.person', [
       return this.person.y;
     },
     middle: function() {
-      return this.size() / 2;
+      return this.size() / 2.0;
     },
     distance: function() {
-      return (MAX_DISTANCE / 100) * this.person.distance;
+      return (MAX_DISTANCE / 100.0) * this.person.distance;
     },
     size: function() {
-      return (MAX_SIZE / 100) * this.person.size;
+      return (MAX_SIZE / 100.0) * this.person.size;
     },
     clicked: function(x, y) {
       

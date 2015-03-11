@@ -6,17 +6,17 @@ angular.module( 'thorvarium.game.loop', [
 .constant('RUNNING', 2)
 .constant('WAITING', 3)
 
-.constant('MAX_SIZE', 17)
-.constant('MAX_DISTANCE', 120)
-.constant('MAX_SPEED', 40)
+.constant('MAX_SIZE', 17.0)
+.constant('MAX_DISTANCE', 120.0)
+.constant('MAX_SPEED', 40.0)
 
-.constant('SCREEN_GAP', 20)
+.constant('SCREEN_GAP', 20.0)
 .constant('SCREEN_WIDTH', 500)
 .constant('SCREEN_HEIGHT', 500)
 
-.constant('MAX_BULLET_SPEED', 200)
-.constant('MAX_BULLET_POWER', 25)
-.constant('MAX_BULLET_SIZE', 5)
+.constant('MAX_BULLET_SPEED', 200.0)
+.constant('MAX_BULLET_POWER', 25.0)
+.constant('MAX_BULLET_SIZE', 5.0)
 
 .service('Game', function($rootScope, $window, Person, Bullet, 
   CHOOSING, 
@@ -123,10 +123,16 @@ angular.module( 'thorvarium.game.loop', [
         _.each(p.persons, function(person, key) {
           var curr = pl.persons[key];
           if (angular.isDefined(curr)) {
-            curr.person.life = person.life;
+
+            if (curr.person.life != person.life) {
+              console.log('diff', curr.person.life, person.life);
+              curr.person.life = person.life;
+            }
+
             curr.person.x = person.x;
             curr.person.y = person.y;
             curr.to = null;
+            console.log(curr.person);
           }
         });
       }
@@ -270,7 +276,9 @@ angular.module( 'thorvarium.game.loop', [
       } else {
 
         var person = _.findKey(that.me().persons, function(p) {
-          return p.clicked(x, y) && (p.movement === null || p.shot === null);
+          return p.person.life > 0 &&
+            p.clicked(x, y) &&
+            (p.movement === null || p.shot === null);
         });
 
         if (angular.isDefined(person)) {
@@ -329,18 +337,21 @@ angular.module( 'thorvarium.game.loop', [
     
     var that = this;
     var hasAction = false;
-    var collided = [];
     
+    var collided = [];
     _.each(this.players, function(player) {
       _.each(player.persons, function(p, key) {
-
-        // collisions
         _.each(that.bullets, function(b) {
           if (b.person !== p && b.collided(p)) {
             p.life -= b.power;
             collided.push(b);
           }
         });
+      });
+    });
+    
+    _.each(this.players, function(player) {
+      _.each(player.persons, function(p, key) {
 
         if (p.to !== null) {
 
@@ -370,14 +381,12 @@ angular.module( 'thorvarium.game.loop', [
 
     this.bullets = _.difference(this.bullets, collided);
     _.each(this.bullets, function(b) {
-      
       var speed = b.speed * elapsed;
-      if (b.x > 0 && b.x < SCREEN_WIDTH) {
-        b.x = b.x + (Math.cos(b.angle) * speed);
-        hasAction = true;
-      }
+      var half = (b.size / 2);
+      if (b.x + half > 0 && b.x - half < SCREEN_WIDTH && 
+        b.y + half > 0 && b.y - half < SCREEN_HEIGHT) {
 
-      if (b.y > 0 && b.y < SCREEN_HEIGHT) {
+        b.x = b.x + (Math.cos(b.angle) * speed);
         b.y = b.y + (Math.sin(b.angle) * speed);
         hasAction = true;
       }
