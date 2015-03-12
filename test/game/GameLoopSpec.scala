@@ -118,7 +118,7 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       gameTest.loop()
 
       var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
-      p2.persons(Player.PersonSlot1).life must beEqualTo(70)
+      p2.persons(Player.PersonSlot1).life must beEqualTo(50)
     }
 
     "must hit player ship" in new GameLoopData {

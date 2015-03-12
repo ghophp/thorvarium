@@ -36,6 +36,20 @@ class GameLoop(var players : Set[Player]) {
         lastTime = current
       }
     }
+
+    if (players.count( p => p.persons.count(_._2.life > 0) > 0 ) < 2) {
+      state = GameLoop.Ended
+    } else {
+      newTurn()
+    }
+  }
+
+  def winner() : Long = {
+    players.filter( p => p.persons.count(_._2.life > 0) > 0 ).toList(0).user.id.get
+  }
+
+  def draw() : Boolean = {
+    players.count( p => p.persons.count(_._2.life > 0) > 0 ) <= 0
   }
 
   def reset() = {
@@ -63,25 +77,26 @@ class GameLoop(var players : Set[Player]) {
 
   def applyMovements(p: Player, elapsed : Double) = {
     if (p.input.movements != null) {
-
       p.input.movements.map { m =>
 
         val person = p.persons(m._1)
-        val angle = Math.atan2(m._2.y - person.y, m._2.x - person.x)
-        val speed = ((GameLoop.MaxSpeed / 100.0) * person.speed) * elapsed
+        if (person.life > 0) {
+          val angle = Math.atan2(m._2.y - person.y, m._2.x - person.x)
+          val speed = ((GameLoop.MaxSpeed / 100.0) * person.speed) * elapsed
 
-        if (Math.abs(person.x - m._2.x) > 1) {
-          person.x = person.x + (Math.cos(angle) * speed)
-          steps += 1
-        } else {
-          person.x = m._2.x
-        }
+          if (Math.abs(person.x - m._2.x) > 1) {
+            person.x = person.x + (Math.cos(angle) * speed)
+            steps += 1
+          } else {
+            person.x = m._2.x
+          }
 
-        if (Math.abs(person.y - m._2.y) > 1) {
-          person.y = person.y + (Math.sin(angle) * speed)
-          steps += 1
-        } else {
-          person.y = m._2.y
+          if (Math.abs(person.y - m._2.y) > 1) {
+            person.y = person.y + (Math.sin(angle) * speed)
+            steps += 1
+          } else {
+            person.y = m._2.y
+          }
         }
       }
     }
@@ -101,7 +116,6 @@ class GameLoop(var players : Set[Player]) {
 
   def applyBullets(elapsed : Double) = {
     bullets.map { b =>
-
       val speed = b.speed * elapsed
       if (b.x > 0 && b.x < GameLoop.SceneWidth &&
         b.y > 0 && b.y < GameLoop.SceneHeight) {
@@ -120,7 +134,7 @@ class GameLoop(var players : Set[Player]) {
         p.input.weapons.map { m =>
 
           val person = p.persons(m._1)
-          if (m._2 != null) {
+          if (person.life > 0 && m._2 != null) {
             val w = m._2
             val weapon = person.weapons(w._1)
             if (weapon.kind == Weapon.SingleShot) {

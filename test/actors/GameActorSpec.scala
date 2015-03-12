@@ -79,7 +79,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
 
-      Thread.sleep(3000)
+      Thread.sleep(1000)
 
       val persons = Person.toPersons(SessionSpec.testPlayerSet)
 
@@ -87,6 +87,37 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, persons)
 
       assert(gameActor.gameLoop != null)
+    }
+
+    "if game ended after loop, forward messages to players" in new GameProbe {
+
+      assert(gameActor.players.size == 0)
+
+      gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
+      gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
+
+      Thread.sleep(1000)
+
+      val persons = Person.toPersons(SessionSpec.testPlayerSet)
+
+      gameActorRef ! PlayerSet(SessionSpec.testUser.id.get, persons)
+      gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, persons)
+
+      assert(gameActor.gameLoop != null)
+      gameActor.gameLoop.players.map { p =>
+        p.persons.map(_._2.life = 0)
+      }
+
+      Thread.sleep(1000)
+
+      gameActorRef ! ReadyToTurn
+      gameActorRef ! ReadyToTurn
+
+      probe2.expectMsgClass(classOf[StartGame])
+      probe2.expectMsgClass(classOf[GameReady])
+      probe2.expectMsg(TurnStart)
+      probe2.expectMsgClass(Duration.create(50, TimeUnit.SECONDS), classOf[PreTurn])
+      probe2.expectMsg(Draw)
     }
   }
 

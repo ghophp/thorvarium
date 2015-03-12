@@ -58,7 +58,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
             gameLoop = new GameLoop(playerSet)
             players.map { _._2 ! GameReady(playerSet, now) }
           }
-        case None => log.info("== PlayerSet not find :: "+ set.user +" ==")
+        case None => log.info("== PlayerSet not found :: "+ set.user +" ==")
       }
 
     case set:PlayerTurnSet =>
@@ -67,7 +67,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
           case Some(p) =>
             gameLoop.players.find( _.user.id.get == p._1.user.id.get ) match {
               case Some(pl) => pl.input = set.input
-              case None => log.info("== PlayerTurnSet not find on GameLoop :: "+ set.user +" ==")
+              case None => log.info("== PlayerTurnSet not found on GameLoop :: "+ set.user +" ==")
             }
           case None => log.info("== PlayerTurnSet not find :: "+ set.user +" ==")
         }
@@ -91,16 +91,25 @@ class GameActor(id: String) extends Actor with ActorLogging {
           p.user.id.get.toString -> p.input
         }.toMap) }
 
-        log.info("== Game turn start ==")
         gameLoop.loop()
-        log.info("== Game turn end ==")
+        if (gameLoop.state == GameLoop.Ended) {
 
-        readyToTurn = 0
-        gameLoop.newTurn()
+          if (gameLoop.draw()) {
+            players.map( _._2 ! Draw )
+          } else {
+            players.map { p =>
+              p._2 ! (if (p._1.user.id.get == gameLoop.winner()) Won else Lose)
+            }
+          }
 
-        players.map { _._2 ! AfterTurn(
-          players.map(_._1).toSet,
-          gameLoop.turns) }
+        } else {
+
+          readyToTurn = 0
+
+          players.map { _._2 ! AfterTurn(
+            players.map(_._1).toSet,
+            gameLoop.turns) }
+        }
       }
 
     case NothingSelected if sender == self =>
@@ -163,5 +172,6 @@ object TurnStart
 object ReadyToTurn
 object TurnEnd
 object NothingSelected
+object Draw
 object Won
 object Lose

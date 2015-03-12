@@ -63,7 +63,7 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
 
     "relay player set to the game" in new GameProbe {
 
-      val testPlayerSet = Json.parse("{\"type\":\"options\",\"persons\":{\"person1\":{\"id\":2,\"name\":\"Person 1\",\"weapon1\":3,\"weapon2\":2},\"person2\":{\"id\":1,\"name\":\"Person 2\",\"weapon1\":2,\"weapon2\":2},\"person3\":{\"id\":2,\"name\":\"Person 3\",\"weapon1\":2,\"weapon2\":2}}}")
+      val testPlayerSet = Json.parse("{\"type\":\"options\",\"persons\":{\"person1\":{\"id\":2,\"name\":\"Person 1\",\"weapon1\":1,\"weapon2\":2},\"person2\":{\"id\":1,\"name\":\"Person 2\",\"weapon1\":2,\"weapon2\":2},\"person3\":{\"id\":2,\"name\":\"Person 3\",\"weapon1\":2,\"weapon2\":2}}}")
       userActor.game = gameProbe.ref
       userActor.receive(testPlayerSet)
 
