@@ -9,5 +9,5 @@ I homage @Olifiers (Henrique Olifers), a very talented developer that brought a 
 ###TODO
 =======
 
-* Implement weapon triple shot
+* Publish at heroku
 * Remove password from JSON
