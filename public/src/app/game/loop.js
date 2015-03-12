@@ -18,6 +18,38 @@ angular.module( 'thorvarium.game.loop', [
 .constant('MAX_BULLET_POWER', 25.0)
 .constant('MAX_BULLET_SIZE', 5.0)
 
+.constant('SLOTS', {
+    PERSON_SLOT1: 'person1',
+    PERSON_SLOT2: 'person2',
+    PERSON_SLOT3: 'person3',    
+    WEAPON_SLOT1: 'weapon1',
+    WEAPON_SLOT2: 'weapon2'
+})
+
+.constant('COLORS', (function(){
+  var slots = {
+    PERSON_SLOT1: 'person1',
+    PERSON_SLOT2: 'person2',
+    PERSON_SLOT3: 'person3',    
+    WEAPON_SLOT1: 'weapon1',
+    WEAPON_SLOT2: 'weapon2'
+  };
+
+  var p1 = $.parseJSON('{"'+
+    slots.PERSON_SLOT1 + '": "#EDC8A3","' +
+    slots.PERSON_SLOT2 + '": "#796151","' +
+    slots.PERSON_SLOT3 + '": "#CD877A"'+
+  '}');
+
+  var p2 = $.parseJSON('{"'+
+    slots.PERSON_SLOT1 + '": "#F0E9E3","' +
+    slots.PERSON_SLOT2 + '": "#28C6D9","' +
+    slots.PERSON_SLOT3 + '": "#EB2873"'+
+  '}');
+
+  return {1: p1, 2: p2};
+})())
+
 .service('Game', function($rootScope, $window, Person, Bullet, 
   CHOOSING, 
   RUNNING, 
@@ -28,7 +60,8 @@ angular.module( 'thorvarium.game.loop', [
   SCREEN_HEIGHT,
   MAX_BULLET_SPEED,
   MAX_BULLET_POWER,
-  MAX_BULLET_SIZE) {
+  MAX_BULLET_SIZE,
+  COLORS) {
 
   this.id = null;
   this.players = [];
@@ -220,7 +253,12 @@ angular.module( 'thorvarium.game.loop', [
       
       this.players = _.map(this.players, function(p){
         p.persons = _.mapObject(p.persons, function(person, key){
-          return new Person(person, that.personsImages[person.id], that.context);
+          return new Person(
+            person,
+            key,
+            angular.copy(COLORS[p.slot][key]),
+            that.personsImages[person.id],
+            that.context);
         });
 
         return p;
@@ -247,6 +285,11 @@ angular.module( 'thorvarium.game.loop', [
     });
   };
 
+  this.setActive = function(active) {
+    this.active = active;
+    $rootScope.$broadcast('actived');
+  };
+
   this.interaction = function(e) {
     var that = $window.Game;
     if (that.state === CHOOSING) {
@@ -270,9 +313,8 @@ angular.module( 'thorvarium.game.loop', [
           } else if (active.shot === null) {
             active.shot = _.extend(angular.copy(active.aiming), {slot: active.weapon});
             active.aiming = null;
+            that.setActive(null);
           }
-
-          that.active = null;
         }
 
       } else {
@@ -284,7 +326,7 @@ angular.module( 'thorvarium.game.loop', [
         });
 
         if (angular.isDefined(person)) {
-          that.active = person;
+          that.setActive(person);
         }
       }
     }

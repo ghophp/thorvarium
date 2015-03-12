@@ -77,8 +77,16 @@ angular.module( 'thorvarium.game', [
     }
   };
 
+  $scope.actived = function(player, person) {
+    return player.user.id === $rootScope.user.id && person === $scope.active;
+  };
+
   $scope.$on('loaded', function() {
     $scope.players = Game.players;
+  });
+
+  $scope.$on('actived', function() {
+    $scope.active = Game.active;
   });
 
   $scope.$on('choosing', function() {
@@ -99,19 +107,19 @@ angular.module( 'thorvarium.game', [
       "id": 2,
       "name": "Person 1",
       "weapon1": 1,
-      "weapon2": 1
+      "weapon2": 2
     },
     "person2": {
       "id": 2,
       "name": "Person 2",
       "weapon1": 1,
-      "weapon2": 1
+      "weapon2": 2
     },
     "person3": {
       "id": 2,
       "name": "Person 3",
       "weapon1": 1,
-      "weapon2": 1
+      "weapon2": 2
     }
   };
 

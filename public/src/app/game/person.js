@@ -7,11 +7,13 @@ angular.module( 'thorvarium.game.person', [
 
 .factory('Person', function (MOVE_INDICATOR, SHOT_INDICATOR, MAX_SIZE, MAX_DISTANCE) {
  
-  function Person(person, image, context) {
+  function Person(person, slot, color, image, context) {
     
     this.person = person;
+    this.slot = slot;
     this.person.full = angular.copy(person.life);
 
+    this.color = color;
     this.image = image;
     this.context = context;
     
@@ -22,8 +24,6 @@ angular.module( 'thorvarium.game.person', [
     this.aiming = null;
 
     this.to = null;
-
-    // active weapon - TODO: make dynamic
     this.weapon = 'weapon1';
   }
 
@@ -69,11 +69,16 @@ angular.module( 'thorvarium.game.person', [
         this.context.drawImage(this.image, this.rx(), this.ry());
         */
 
-        this.context.fillStyle = !active ? '#fff' : '#ccc';
+        this.context.fillStyle = this.color;
         this.context.beginPath();
         this.context.arc(this.x(), this.y(), this.size(), 0, Math.PI * 2, true);
         this.context.closePath();
         this.context.fill();
+        
+        if (active) {
+          this.context.strokeStyle = '#C5C0C6';
+          this.context.stroke();
+        }
 
         this.context.closePath();
         this.context.restore();

@@ -9,13 +9,23 @@
 	.player {
 		margin-bottom: 20px;
 		.person {
+			padding: 5px;
 			.person-name {
-				
+				margin: 2px 0;
+				.btn-group {
+					label {
+						font-size: 9px;
+						padding: 3px;
+					}
+				}
 			}
 			.person-life {
 				.progress {
 					margin-bottom: 0;
 				}
+			}
+			&.active {
+				background-color: #C5C0C6 !important;
 			}
 		}
 	}
