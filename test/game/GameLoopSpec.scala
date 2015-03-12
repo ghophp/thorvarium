@@ -29,6 +29,9 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
     val testHitTurnSet = Json.obj("persons" -> Json.obj("person1" ->
       Json.obj("x" -> 25, "y" -> 25, "weapon" -> Json.obj("slot" -> "weapon1", "x" -> 25, "y" -> 25))))
+
+    val testInverseHitTurnSet = Json.obj("persons" -> Json.obj("person1" ->
+      Json.obj("weapon" -> Json.obj("slot" -> "weapon1", "x" -> 450, "y" -> 450))))
   }
 
   "GameLoopTest" should {
@@ -104,6 +107,20 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       p2.input.movements(Player.PersonSlot1).y must beEqualTo(GameLoop.SceneGapH)
     }
 
+    "must ignore weapons of dead person" in new GameLoopData {
+
+      val gameTest = new GameLoop(Set(player1, player2))
+
+      var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
+      p1.persons.map(_._2.life = 0)
+      p1.input = GamingSet.toTurnSet(testHitTurnSet)
+
+      gameTest.loop()
+
+      var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
+      p2.persons(Player.PersonSlot1).life must beEqualTo(70)
+    }
+
     "must hit player ship" in new GameLoopData {
 
       val gameTest = new GameLoop(Set(player1, player2))
@@ -115,6 +132,21 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
 
       var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
       p2.persons(Player.PersonSlot1).life must beEqualTo(25)
+    }
+
+    "must end the game when no person alive" in new GameLoopData {
+
+      val gameTest = new GameLoop(Set(player1, player2))
+
+      var p1 = gameTest.players.find( _.slot == Player.Player1 ).get
+      p1.persons.map(_._2.life = 0)
+      p1.persons("person1").life = 5
+
+      var p2 = gameTest.players.find( _.slot == Player.Player2 ).get
+      p2.input = GamingSet.toTurnSet(testInverseHitTurnSet)
+
+      gameTest.loop()
+      gameTest.state must beEqualTo(GameLoop.Ended)
     }
   }
 }

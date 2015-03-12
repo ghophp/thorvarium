@@ -10,7 +10,6 @@ CREATE TABLE "weapon" ("id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL UNIQUE,
 
 INSERT INTO weapon (id, name, kind, speed, power, size) VALUES (1, "Single Shot", 1, 80, 100, 100);
 INSERT INTO weapon (id, name, kind, speed, power, size) VALUES (2, "Triple Shot", 2, 100, 50, 50);
-INSERT INTO weapon (id, name, kind, speed, power, size) VALUES (3, "Barrier", 3, 0, 100, 0);
 
 
 # --- !Downs

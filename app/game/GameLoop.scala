@@ -149,6 +149,7 @@ class GameLoop(var players : Set[Player]) {
 object GameLoop {
   val WaitingInput = 1
   val Running = 2
+  val Ended = 3
 
   val SceneWidth = 500
   val SceneHeight = 500
