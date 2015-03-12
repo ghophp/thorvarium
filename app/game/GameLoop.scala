@@ -135,17 +135,38 @@ class GameLoop(var players : Set[Player]) {
 
           val person = p.persons(m._1)
           if (person.life > 0 && m._2 != null) {
+
             val w = m._2
             val weapon = person.weapons(w._1)
+            val angle = Math.atan2(w._2.y - person.y, w._2.x - person.x)
+            val speed = (GameLoop.MaxBulletSpeed / 100.0) * weapon.speed
+            val power = (GameLoop.MaxBulletPower / 100.0) * weapon.power
+            val size = (GameLoop.MaxBulletSize / 100.0) * weapon.size
+
             if (weapon.kind == Weapon.SingleShot) {
 
-              val angle = Math.atan2(w._2.y - person.y, w._2.x - person.x)
-              val speed = (GameLoop.MaxBulletSpeed / 100.0) * weapon.speed
-              val power = (GameLoop.MaxBulletPower / 100.0) * weapon.power
-              val size = (GameLoop.MaxBulletSize / 100.0) * weapon.size
+              bullets += new GamingBullet(p,
+                person,
+                weapon,
+                angle,
+                speed,
+                power,
+                size,
+                person.x,
+                person.y)
 
-              bullets += new GamingBullet(
-                p, person, weapon, angle, speed, power, size, person.x, person.y)
+            } else if (weapon.kind == Weapon.TripleShot) {
+              for (x <- List(-1, 0, 1)) {
+                bullets += new GamingBullet(p,
+                  person,
+                  weapon,
+                  angle + (x * GameLoop.TripleShotVariation),
+                  speed,
+                  power,
+                  size,
+                  person.x,
+                  person.y)
+              }
             }
           }
         }
@@ -179,4 +200,6 @@ object GameLoop {
   val MaxBulletSpeed = 200.0
   val MaxBulletPower = 25.0
   val MaxBulletSize = 5.0
+
+  val TripleShotVariation = 0.06
 }

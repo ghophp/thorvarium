@@ -5,7 +5,7 @@ angular.module( 'thorvarium.game.person', [
 .constant('MOVE_INDICATOR', 5)
 .constant('SHOT_INDICATOR', 5)
 
-.factory('Person', function (MOVE_INDICATOR, SHOT_INDICATOR, MAX_SIZE, MAX_DISTANCE) {
+.factory('Person', function (MOVE_INDICATOR, SHOT_INDICATOR, MAX_SIZE, MAX_DISTANCE, SLOTS) {
  
   function Person(person, slot, color, image, context) {
     
@@ -24,7 +24,7 @@ angular.module( 'thorvarium.game.person', [
     this.aiming = null;
 
     this.to = null;
-    this.weapon = 'weapon1';
+    this.weapon = angular.copy(SLOTS.WEAPON_SLOT1);
   }
 
   Person.prototype = {

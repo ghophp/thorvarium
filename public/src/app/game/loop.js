@@ -18,6 +18,13 @@ angular.module( 'thorvarium.game.loop', [
 .constant('MAX_BULLET_POWER', 25.0)
 .constant('MAX_BULLET_SIZE', 5.0)
 
+.constant('TRIPLE_SHOT_VARIATION', 0.06)
+
+.constant('WEAPONS', {
+    SINGLE_SHOT: 1,
+    TRIPLE_SHOT: 2
+})
+
 .constant('SLOTS', {
     PERSON_SLOT1: 'person1',
     PERSON_SLOT2: 'person2',
@@ -61,6 +68,8 @@ angular.module( 'thorvarium.game.loop', [
   MAX_BULLET_SPEED,
   MAX_BULLET_POWER,
   MAX_BULLET_SIZE,
+  TRIPLE_SHOT_VARIATION,
+  WEAPONS,
   COLORS) {
 
   this.id = null;
@@ -208,17 +217,36 @@ angular.module( 'thorvarium.game.loop', [
                 var power = (MAX_BULLET_POWER / 100.0) * currw.power;
                 var size = (MAX_BULLET_SIZE / 100.0) * currw.size;
 
-                that.bullets.push(new Bullet(
-                  pl,
-                  curr,
-                  currw,
-                  angle,
-                  speed,
-                  power,
-                  size,
-                  curr.person.x,
-                  curr.person.y,
-                  that.context));
+                if (currw.kind === WEAPONS.SINGLE_SHOT) {
+                
+                  that.bullets.push(new Bullet(
+                    pl,
+                    curr,
+                    currw,
+                    angle,
+                    speed,
+                    power,
+                    size,
+                    curr.person.x,
+                    curr.person.y,
+                    that.context));
+
+                } else if (currw.kind === WEAPONS.TRIPLE_SHOT) {
+
+                  for (var x = -1; x < 2; x++) {
+                    that.bullets.push(new Bullet(
+                      pl,
+                      curr,
+                      currw,
+                      angle + (x * TRIPLE_SHOT_VARIATION),
+                      speed,
+                      power,
+                      size,
+                      curr.person.x,
+                      curr.person.y,
+                      that.context));
+                  }
+                }
               }
             });          
             hasAction = true;
@@ -426,9 +454,8 @@ angular.module( 'thorvarium.game.loop', [
     this.bullets = _.difference(this.bullets, collided);
     _.each(this.bullets, function(b) {
       var speed = b.speed * elapsed;
-      var half = (b.size / 2);
-      if (b.x + half > 0 && b.x - half < SCREEN_WIDTH && 
-        b.y + half > 0 && b.y - half < SCREEN_HEIGHT) {
+      if (b.x + b.size > 0 && b.x - b.size < SCREEN_WIDTH && 
+        b.y + b.size > 0 && b.y - b.size < SCREEN_HEIGHT) {
 
         b.x = b.x + (Math.cos(b.angle) * speed);
         b.y = b.y + (Math.sin(b.angle) * speed);
