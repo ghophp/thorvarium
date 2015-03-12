@@ -102,6 +102,8 @@ class GameActor(id: String) extends Actor with ActorLogging {
             }
           }
 
+          endGame()
+
         } else {
 
           readyToTurn = 0
@@ -147,7 +149,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
     }
 
     board ! EndGame(id)
-    context stop self
+    self ! PoisonPill
   }
 
   def getId = {

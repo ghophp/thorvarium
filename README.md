@@ -10,6 +10,4 @@ I homage @Olifiers (Henrique Olifers), a very talented developer that brought a 
 =======
 
 * Implement weapon triple shot
-* Implement weapon barrier
-* Implement the end of the game when no person alive
 * Remove password from JSON
