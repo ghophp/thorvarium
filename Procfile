@@ -1,1 +1,1 @@
-web: target/start -Dhttp.port=${PORT} ${JAVA_OPTS} -Dconfig.resource=production.conf
+web: target/universal/stage/bin/thorvarium -Dhttp.port=${PORT} ${JAVA_OPTS} -Dconfig.resource=production.conf
