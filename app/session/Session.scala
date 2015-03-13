@@ -1,5 +1,7 @@
 package session
 
+import java.net.URI
+
 import models.User
 import com.redis.RedisClient
 import play.api.Play
@@ -9,7 +11,7 @@ trait SessionRepository {
   def sessionManager: Session
 
   trait Session {
-    val redisClient : RedisClient
+    var redisClient : RedisClient
     def redis: RedisClient
     def uuid: String
     def authorize(user: User): String
@@ -23,9 +25,24 @@ trait SessionRepositoryComponentImpl extends SessionRepository {
 
   class SessionRepositoryImpl extends Session {
 
-    val redisClient = new RedisClient(
-      Play.current.configuration.getString("redis.default.host").get,
-      Play.current.configuration.getInt("redis.default.port").get)
+    val redisUri = new URI(Play.current.configuration.getString("redis.default.uri").get)
+    var redisClient : RedisClient = null
+
+    if (redisUri.getUserInfo != null &&
+      !redisUri.getUserInfo.isEmpty) {
+
+      val userInfo = redisUri.getUserInfo.split(":", 2)
+      redisClient = new RedisClient(
+        redisUri.getHost,
+        redisUri.getPort,
+        0,
+        Some(userInfo{1}))
+
+    } else {
+      redisClient = new RedisClient(
+        redisUri.getHost,
+        redisUri.getPort)
+    }
 
     def redis = {
       redisClient
