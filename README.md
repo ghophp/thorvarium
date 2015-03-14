@@ -1,6 +1,8 @@
 ##Thorvarium
 ==============
 
+[![Build Status](https://travis-ci.org/ghophp/thorvarium.svg?branch=master)](https://travis-ci.org/ghophp/thorvarium)
+
 Multiplayer game server about spaceship. While I use this project to learn more about Scala and the typesafe platform,
 I homage @Olifiers (Henrique Olifers), a very talented developer that brought a lot of fun to my childhood.
 
