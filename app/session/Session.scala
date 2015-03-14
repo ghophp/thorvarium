@@ -11,6 +11,7 @@ trait SessionRepository {
   def sessionManager: Session
 
   trait Session {
+    val redisUri : URI
     var redisClient : RedisClient
     def redis: RedisClient
     def uuid: String

@@ -1,7 +1,11 @@
 package session
 
+import java.net.URI
+
+import com.redis.{RedisCommand, RedisClient}
 import integration.WithTestDatabase
 import models.User
+import org.mockito.Mockito
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.PlaySpecification
@@ -16,9 +20,39 @@ class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSu
 
     override def sessionManager: Session = new SessionTestRepositoryImpl()
 
-    class SessionTestRepositoryImpl extends SessionRepositoryImpl {
+    trait RedisCommandTest extends RedisCommand {
+      override def initialize : Boolean = {
+        true
+      }
+    }
+
+    class RedisTest extends RedisClient with RedisCommandTest {
+
+    }
+
+    class SessionTestRepositoryImpl extends Session {
+
+      val redisUri : URI = null
+      var redisClient : RedisClient = new RedisTest()
+
+      def redis = {
+        redisClient
+      }
+
       override def uuid : String = {
         SessionSpec.testUUID
+      }
+
+      def authorize(user: User): String = {
+        uuid
+      }
+
+      def authorized(uuid: String): Option[User] = {
+        if (uuid == SessionSpec.testUUID) {
+          Some(User.fromJson(SessionSpec.testUser.toJson.toString()))
+        } else {
+          None
+        }
       }
     }
   }
