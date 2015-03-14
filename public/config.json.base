@@ -1,4 +1,0 @@
-{
-	"ws": "ws://127.0.0.1:9000/ws",
-	"assets": "http://127.0.0.1:9000/client/bin/assets"
-}
