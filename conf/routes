@@ -2,11 +2,10 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
+OPTIONS /*all                       controllers.Application.preFlight(all: String)
+
 GET     /                           controllers.Application.index
 POST    /login                      controllers.Users.login
 POST    /status                     controllers.Users.status
 
 GET     /ws                         controllers.Application.ws
-
-# Map static resources from the /public folder to the /assets URL path
-GET     /client/*file               controllers.Assets.at(path="/public", file)
