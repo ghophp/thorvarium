@@ -1,17 +1,10 @@
 ##Thorvarium
-==============
 
 [![Build Status](https://travis-ci.org/ghophp/thorvarium.svg?branch=master)](https://travis-ci.org/ghophp/thorvarium)
 
-Multiplayer game server about spaceship. While I use this project to learn more about Scala and the typesafe platform,
-I homage @Olifiers (Henrique Olifers), a very talented developer that brought a lot of fun to my childhood.
+Multiplayer game server built with scala + akka + play. While I use this project to learn more about Scala and the reactive programming,
+I homage @Olifiers (Henrique Olifers), a very talented developer that brought a lot of fun to my childhood with this multiplayer game structure.
 
-###TODO
-=======
+###JS Client
 
-* Server active the turn just when both clients sent the turn_start, this could hang in lag
-* When the tab is inactive, the client simulate the game buggy
-* Disable ready and clean movements at the running state at client
-* Ignore inputs at the running stage
-* Fix scroll at chat
-* Remove password from JSON
+You can see the client that connect with this server here: [thorvarium-js-client](https://github.com/ghophp/thorvarium-js-client)
