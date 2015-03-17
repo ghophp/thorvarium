@@ -3,5 +3,5 @@ scala:
    - 2.11.2
 deploy:
   provider: heroku
-  api_key: 2dfc7b5a2775d27e00ca82ccab354c079b179823
+  api_key: <%= ENV['HEROKU_ACCESS_KEY_ID'] %>
   strategy: git
