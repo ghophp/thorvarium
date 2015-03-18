@@ -1,7 +1,10 @@
 language: scala
 scala:
-   - 2.11.2
+- 2.11.2
 deploy:
   provider: heroku
-  api_key: <%= ENV['HEROKU_ACCESS_KEY_ID'] %>
+  api_key: "<%= ENV['HEROKU_ACCESS_KEY_ID'] %>"
   strategy: git
+env:
+  global:
+    secure: dZHb7id271MbXAVLRR7al95tWsRG1z1uHcllrAJAAZEHkSt4S7al8IJZg15F1UFD90gcykT2QapZieTTywA5y1CGHpIP0C3YJP2gy5bg3dgDaOwsP7Rd/2I1NqMw29bxgaFYnZyjo1om1qo5uEGSs9XxFHMGjD48Lp8VY/Hn4ZY=
