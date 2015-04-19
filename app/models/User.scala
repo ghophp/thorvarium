@@ -6,12 +6,12 @@ import play.api.db.DB
 import play.api.Play.current
 import play.api.libs.json.Json
 
-case class User(id: Option[Long] = None, nickname: String, password: String) {
+case class User(id: Option[Long] = None, nickname: String, password: String = null) {
+
   def toJson = {
     Json.obj(
       "id" -> id.get,
-      "nickname" -> nickname,
-      "password" -> password)
+      "nickname" -> nickname)
   }
 }
 
@@ -57,7 +57,6 @@ object User {
     val json = Json.parse(raw)
     User(
       (json \ "id").asOpt[Long],
-      (json \ "nickname").as[String],
-      (json \ "password").as[String])
+      (json \ "nickname").as[String])
   }
 }
