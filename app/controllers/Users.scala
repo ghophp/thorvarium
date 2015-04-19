@@ -38,6 +38,28 @@ trait Users extends SessionRepository {
       }
     }
 
+    def logout = Action { implicit request =>
+
+      val params = request.body.asFormUrlEncoded.filter(k =>
+        k.get("auth").isDefined
+      )
+
+      if (params.getOrElse(Map()).size == 1) {
+
+        val uuid: String = params.get.get("auth").get(0)
+        if (!uuid.isEmpty) {
+
+          sessionManager.revoke(uuid)
+          Ok(Json.obj("status" -> "success"))
+
+        } else {
+          BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
+        }
+      } else {
+        BadRequest(Json.obj("status" -> "error", "cause" -> "invalid_params"))
+      }
+    }
+
     def status = Action { implicit request =>
 
       val params = request.body.asFormUrlEncoded.filter(k =>

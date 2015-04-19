@@ -16,6 +16,7 @@ trait SessionRepository {
     def redis: RedisClient
     def uuid: String
     def authorize(user: User): String
+    def revoke(uuid: String)
     def authorized(uuid: String): Option[User]
   }
 }
@@ -57,6 +58,10 @@ trait SessionRepositoryComponentImpl extends SessionRepository {
       val id = uuid
       redisClient.set(id, user.toJson.toString())
       id
+    }
+
+    def revoke(uuid: String) = {
+      redisClient.del(uuid)
     }
 
     def authorized(uuid: String): Option[User] = {

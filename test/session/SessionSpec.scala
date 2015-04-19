@@ -5,16 +5,11 @@ import java.net.URI
 import com.redis.{RedisCommand, RedisClient}
 import integration.WithTestDatabase
 import models.User
-import org.mockito.Mockito
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.PlaySpecification
 
 class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSugar {
-
-  def beforeAll() = {
-    new SessionTest().sessionManager.redis.del(SessionSpec.testUUID)
-  }
 
   trait SessionTestComponentImpl extends SessionRepositoryComponentImpl {
 
@@ -44,11 +39,16 @@ class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSu
       }
 
       def authorize(user: User): String = {
+        SessionSpec.revoked.clear()
         uuid
       }
 
+      def revoke(uuid: String) = {
+        SessionSpec.revoked += uuid
+      }
+
       def authorized(uuid: String): Option[User] = {
-        if (uuid == SessionSpec.testUUID) {
+        if (uuid == SessionSpec.testUUID && !SessionSpec.revoked.contains(uuid)) {
           Some(User.fromJson(SessionSpec.testUser.toJson.toString()))
         } else {
           None
@@ -73,6 +73,12 @@ class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSu
       val uuid = sessionTest.sessionManager.authorize(SessionSpec.testUser)
       sessionTest.sessionManager.authorized(uuid) must beSome
     }
+    "should be revoked after revoke" in {
+      val sessionTest = new SessionTest()
+      val uuid = sessionTest.sessionManager.authorize(SessionSpec.testUser)
+      sessionTest.sessionManager.revoke(uuid)
+      sessionTest.sessionManager.authorized(uuid) must beNone
+    }
   }
 }
 
@@ -81,6 +87,8 @@ object SessionSpec extends SessionSpec {
   val testUser : User = User(Some(1), "test", "test")
   val testUser2 : User = User(Some(2), "test2", "test2")
   val testUser3 : User = User(Some(3), "test3", "test3")
+
+  var revoked = scala.collection.mutable.Set[String]()
 
   val testPlayerSet = Json.obj("persons" -> Json.obj(
     "person1" -> Json.obj("id" -> 1, "weapon1" -> 1, "weapon2" -> 2),

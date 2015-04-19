@@ -6,6 +6,7 @@ OPTIONS /*all                       controllers.Application.preFlight(all: Strin
 
 GET     /                           controllers.Application.index
 POST    /login                      controllers.Users.login
+POST    /logout                     controllers.Users.logout
 POST    /status                     controllers.Users.status
 
 GET     /ws                         controllers.Application.ws
