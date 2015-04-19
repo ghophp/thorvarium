@@ -12,10 +12,6 @@ import session.SessionSpec.SessionTestComponentImpl
 
 class UsersSpec extends PlaySpecification with Results with MockitoSugar with WithTestDatabase {
 
-  def beforeAll() = {
-    new UsersTestController().sessionManager.redis.del(SessionSpec.testUUID)
-  }
-
   class UsersTestController() extends Controller with Users with SessionTestComponentImpl
 
   "UsersTestController#login" should {
@@ -123,6 +119,25 @@ class UsersSpec extends PlaySpecification with Results with MockitoSugar with Wi
       val bodyStatusText: String = contentAsString(resultStatus)
       bodyStatusText must contain("success")
       bodyStatusText must contain("\"id\":1")
+    }
+    "should return unauthorized in case of user logout" in new CreateUser {
+
+      val controller = new UsersTestController()
+      val request = FakeRequest(Helpers.POST, controllers.routes.Users.login().url)
+        .withFormUrlEncodedBody(
+          "nickname" -> "test",
+          "password" -> "4297f44b13955235245b2497399d7a93")
+
+      val result = call(controller.login, request)
+
+      val logoutRequest = FakeRequest(Helpers.POST, controllers.routes.Users.logout().url)
+        .withFormUrlEncodedBody(
+          "auth" -> SessionSpec.testUUID)
+
+      val logoutStatus = call(controller.logout, logoutRequest)
+
+      val bodyStatusText: String = contentAsString(logoutStatus)
+      bodyStatusText must contain("success")
     }
   }
 

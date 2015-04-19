@@ -5,16 +5,11 @@ import java.net.URI
 import com.redis.{RedisCommand, RedisClient}
 import integration.WithTestDatabase
 import models.User
-import org.mockito.Mockito
 import org.scalatest.mock.MockitoSugar
 import play.api.libs.json.Json
 import play.api.test.PlaySpecification
 
 class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSugar {
-
-  def beforeAll() = {
-    new SessionTest().sessionManager.redis.del(SessionSpec.testUUID)
-  }
 
   trait SessionTestComponentImpl extends SessionRepositoryComponentImpl {
 
@@ -45,6 +40,10 @@ class SessionSpec extends PlaySpecification with WithTestDatabase with MockitoSu
 
       def authorize(user: User): String = {
         uuid
+      }
+
+      def revoke(uuid: String) = {
+
       }
 
       def authorized(uuid: String): Option[User] = {
