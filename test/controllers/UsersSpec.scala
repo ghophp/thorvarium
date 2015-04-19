@@ -129,8 +129,6 @@ class UsersSpec extends PlaySpecification with Results with MockitoSugar with Wi
           "password" -> "4297f44b13955235245b2497399d7a93")
 
       val result = call(controller.login, request)
-      val bodyText: String = contentAsString(result)
-      bodyText must contain("success")
 
       val logoutRequest = FakeRequest(Helpers.POST, controllers.routes.Users.logout().url)
         .withFormUrlEncodedBody(
@@ -138,13 +136,8 @@ class UsersSpec extends PlaySpecification with Results with MockitoSugar with Wi
 
       val logoutStatus = call(controller.logout, logoutRequest)
 
-      val requestStatus = FakeRequest(Helpers.POST, controllers.routes.Users.status().url)
-        .withFormUrlEncodedBody(
-          "auth" -> SessionSpec.testUUID)
-
-      val resultStatus = call(controller.status, requestStatus)
-      val bodyStatusText: String = contentAsString(resultStatus)
-      bodyStatusText must contain("unauthorized")
+      val bodyStatusText: String = contentAsString(logoutStatus)
+      bodyStatusText must contain("success")
     }
   }
 
