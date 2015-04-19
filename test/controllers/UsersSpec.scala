@@ -12,9 +12,7 @@ import session.SessionSpec.SessionTestComponentImpl
 
 class UsersSpec extends PlaySpecification with Results with MockitoSugar with WithTestDatabase {
 
-  class UsersTestController() extends Controller with Users with SessionTestComponentImpl {
-    sessionManager.redis.del(SessionSpec.testUUID)
-  }
+  class UsersTestController() extends Controller with Users with SessionTestComponentImpl
 
   "UsersTestController#login" should {
     "should return invalid_params in case of wrong parameters name" in {
