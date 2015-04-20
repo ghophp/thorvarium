@@ -8,6 +8,7 @@ import game.GameLoop
 import game.models.GamingSet
 import models.{Weapon, Person, Player, User}
 import org.joda.time.DateTime
+import scala.collection.mutable
 import scala.concurrent.duration._
 
 class GameActor(id: String) extends Actor with ActorLogging {
@@ -19,7 +20,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
   var stepTimer : Cancellable = null
   var gameLoop : GameLoop = null
-  var readyToTurn : Int = 0
+  var readyToTurn : mutable.MutableList[Long] = mutable.MutableList.empty
 
   def receive = LoggingReceive {
 
@@ -76,12 +77,27 @@ class GameActor(id: String) extends Actor with ActorLogging {
         }
       }
 
-    case ReadyToTurn =>
-      readyToTurn += 1
-      if (readyToTurn >= 2) {
+    case ReadyToTurn(user: Long) =>
+      readyToTurn += user
+      if (readyToTurn.size <= 1) {
+        timer(Abandoned)
+      } else if (readyToTurn.size >= 2) {
+
+        if (stepTimer != null) {
+          stepTimer.cancel()
+        }
+
         players.map { _._2 ! TurnStart }
         timer(TurnEnd)
       }
+
+    case Abandoned if sender == self =>
+      readyToTurn.map { u =>
+        players.map { p =>
+          if (p._1.user.id.get == u) p._2 ! Won else p._2 ! Lose
+        }
+      }
+      endGame()
 
     case TurnEnd if sender == self =>
       if (gameLoop != null && stepTimer != null) {
@@ -106,7 +122,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
         } else {
 
-          readyToTurn = 0
+          readyToTurn.clear()
 
           players.map { _._2 ! AfterTurn(
             players.map(_._1).toSet,
@@ -169,11 +185,12 @@ case class GameReady(players: Set[Player], now: Long)
 case class PreTurn(inputs: Map[String, GamingSet])
 case class AfterTurn(players: Set[Player], turns: Int)
 case class PlayerTurnSet(user: Long, input: GamingSet)
+case class ReadyToTurn(user: Long)
 
 object TurnStart
-object ReadyToTurn
 object TurnEnd
 object NothingSelected
+object Abandoned
 object Draw
 object Won
 object Lose

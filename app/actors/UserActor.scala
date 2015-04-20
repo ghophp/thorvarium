@@ -37,7 +37,7 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
             game ! PlayerSet(user.id.get, persons)
           }
         case "ready_to_turn" if game != null =>
-          game ! ReadyToTurn
+          game ! ReadyToTurn(user.id.get)
         case "input" if game != null =>
           val input = GamingSet.toTurnSet(command)
           if (input != null) {
