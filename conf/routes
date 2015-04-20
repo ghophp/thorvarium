@@ -2,11 +2,11 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-OPTIONS /*all                       controllers.Application.preFlight(all: String)
-
 GET     /                           controllers.Application.index
 POST    /login                      controllers.Users.login
 POST    /logout                     controllers.Users.logout
 POST    /status                     controllers.Users.status
 
 GET     /ws                         controllers.Application.ws
+
+GET     /game/*file                 controllers.StaticAssets.at(file)
