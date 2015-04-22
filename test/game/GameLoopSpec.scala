@@ -148,5 +148,15 @@ class GameLoopSpec extends PlaySpecification with WithTestDatabase with MockitoS
       gameTest.loop()
       gameTest.state must beEqualTo(GameLoop.Ended)
     }
+
+    "must end the game after 150" in new GameLoopData {
+
+      val gameTest = new GameLoop(Set(player1, player2))
+
+      gameTest.turns = 149
+      gameTest.newTurn()
+
+      gameTest.state must beEqualTo(GameLoop.Ended)
+    }
   }
 }

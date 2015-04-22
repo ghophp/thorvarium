@@ -49,7 +49,7 @@ class GameLoop(var players : Set[Player]) {
   }
 
   def draw() : Boolean = {
-    players.count( p => p.persons.count(_._2.life > 0) > 0 ) <= 0
+    turns >= GameLoop.MaxTurns || players.count( p => p.persons.count(_._2.life > 0) > 0 ) <= 0
   }
 
   def reset() = {
@@ -178,6 +178,10 @@ class GameLoop(var players : Set[Player]) {
     turns += 1
     players.map { _.input = null }
     collisions = Set()
+
+    if (turns >= GameLoop.MaxTurns) {
+      state = GameLoop.Ended
+    }
   }
 }
 
@@ -200,6 +204,8 @@ object GameLoop {
   val MaxBulletSpeed = 200.0
   val MaxBulletPower = 25.0
   val MaxBulletSize = 5.0
+
+  val MaxTurns = 150
 
   val TripleShotVariation = 0.06
 }
