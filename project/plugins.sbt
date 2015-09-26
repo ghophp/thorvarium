@@ -11,4 +11,10 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-less" % "1.0.0")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-coffeescript" % "1.0.0")
 
+resolvers += Classpaths.sbtPluginReleases
+
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.0.4")
+
+addSbtPlugin("org.scoverage" % "sbt-coveralls" % "1.0.0")
+
 dependencyOverrides += "org.scala-sbt" % "sbt" % "0.13.7"

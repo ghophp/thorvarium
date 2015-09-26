@@ -1,3 +1,5 @@
+import org.scoverage.coveralls.Imports.CoverallsKeys._
+
 name := """Thorvarium"""
 
 version := "1.0-SNAPSHOT"
@@ -18,5 +20,7 @@ libraryDependencies ++= Seq(
   "org.scalatestplus" %% "play" % "1.1.0" % "test",
   "net.debasishg" %% "redisclient" % "2.13"
 )
+
+coverallsToken := sys.props.get("COVERALLS_REPO_TOKEN")
 
 resolvers += "Rhinofly Internal Repository" at "http://maven-repository.rhinofly.net:8081/artifactory/libs-release-local"

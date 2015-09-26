@@ -6,3 +6,5 @@ deploy:
   strategy: git
   api_key:
     secure: Vy5iFcMl4wDjZPPK9s+SDS4lXrbPuClxBRWTeXD13UIySFd8DZdWnp8ySWOULxEyrOiWSPlf4CjE7X4/5tXJrt8oF4dg2KYD3rP3kBLQo1IgnXX0HTLHOFkzsmyMGurVBA0LS2cHkObRilhqRtcB3LdKqxLD6ex2JPnkZ6ZFGr4=
+script: "sbt clean coverage test"
+after_success: "sbt coveralls"
