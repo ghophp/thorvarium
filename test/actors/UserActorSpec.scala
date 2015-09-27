@@ -1,5 +1,7 @@
 package actors
 
+import java.util.concurrent.TimeUnit
+
 import game.models.GamingSet
 import integration.WithTestDatabase
 import models.Person
@@ -11,6 +13,8 @@ import akka.testkit.TestProbe
 
 import play.api.libs.json.Json
 import session.SessionSpec
+
+import scala.concurrent.duration.Duration
 
 class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationLike with WithTestDatabase {
 
@@ -39,6 +43,13 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
       val testMsg = Json.obj("type" -> "message", "content" -> text)
       userActor.receive(testMsg)
       boardProbe.expectMsg(Message(SessionSpec.testUser, text))
+    }
+
+    "do not relay messages to the board if bigger then 140 characters" in new BoardProbe {
+      val text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in erat velit. Nunc id lobortis mi. Etiam eget ultrices tellus, a venenatis felaa"
+      val testMsg = Json.obj("type" -> "message", "content" -> text)
+      userActor.receive(testMsg)
+      boardProbe.expectNoMsg()
     }
 
     "relay invitation to the board" in new BoardProbe {
@@ -90,6 +101,18 @@ class UserActorSpec extends AbstractTestKit("UserActorSpec") with SpecificationL
 
       val turnSet = GamingSet.toTurnSet(testTurnSet)
       gameProbe.expectMsgClass(classOf[PlayerTurnSet])
+    }
+
+    "should ping after start timer" in new BoardProbe {
+      userActor.ping()
+      assert(userActor.pingTimer != null)
+      socketActorProbe.expectMsg(Duration.create(8, TimeUnit.SECONDS), Json.obj("type" -> "ping"))
+    }
+
+    "should ping after receive ping message" in new BoardProbe {
+      userActorRef ! Ping
+      assert(userActor.pingTimer != null)
+      socketActorProbe.expectMsg(Duration.create(8, TimeUnit.SECONDS), Json.obj("type" -> "ping"))
     }
   }
 

@@ -36,7 +36,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
         val now = DateTime.now().getMillis
         log.info("== Start choose timer at :: "+ now +" ==")
 
-        players.map { _._2 ! StartGame(id,
+        players.foreach { _._2 ! StartGame(id,
           Person.list,
           Weapon.list,
           now) }
@@ -55,9 +55,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
             val now = DateTime.now().getMillis
             log.info("== Game ready at :: "+ now +" ==")
 
-            val playerSet = players.map(_._1).toSet
+            val playerSet = players.keys.toSet
             gameLoop = new GameLoop(playerSet)
-            players.map { _._2 ! GameReady(playerSet, now) }
+            players.foreach { _._2 ! GameReady(playerSet, now) }
           }
         case None => log.info("== PlayerSet not found :: "+ set.user +" ==")
       }
@@ -87,13 +87,13 @@ class GameActor(id: String) extends Actor with ActorLogging {
           stepTimer.cancel()
         }
 
-        players.map { _._2 ! TurnStart }
+        players.foreach { _._2 ! TurnStart }
         timer(TurnEnd)
       }
 
     case Abandoned if sender == self =>
-      readyToTurn.map { u =>
-        players.map { p =>
+      readyToTurn.foreach { u =>
+        players.foreach { p =>
           if (p._1.user.id.get == u) p._2 ! Won else p._2 ! Lose
         }
       }
@@ -103,7 +103,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
       if (gameLoop != null && stepTimer != null) {
         stepTimer.cancel()
 
-        players.map { _._2 ! PreTurn(gameLoop.players.map { p =>
+        players.foreach { _._2 ! PreTurn(gameLoop.players.map { p =>
           p.user.id.get.toString -> p.input
         }.toMap) }
 
@@ -111,9 +111,9 @@ class GameActor(id: String) extends Actor with ActorLogging {
         if (gameLoop.state == GameLoop.Ended) {
 
           if (gameLoop.draw()) {
-            players.map( _._2 ! Draw )
+            players.foreach( _._2 ! Draw )
           } else {
-            players.map { p =>
+            players.foreach { p =>
               p._2 ! (if (p._1.user.id.get == gameLoop.winner()) Won else Lose)
             }
           }
@@ -124,14 +124,14 @@ class GameActor(id: String) extends Actor with ActorLogging {
 
           readyToTurn.clear()
 
-          players.map { _._2 ! AfterTurn(
-            players.map(_._1).toSet,
+          players.foreach { _._2 ! AfterTurn(
+            players.keys.toSet,
             gameLoop.turns) }
         }
       }
 
     case NothingSelected if sender == self =>
-      players.map { _._2 ! NothingSelected }
+      players.foreach { _._2 ! NothingSelected }
       endGame()
 
     case Terminated(user) =>
@@ -140,7 +140,7 @@ class GameActor(id: String) extends Actor with ActorLogging {
           players -= x._1
           context unwatch x._2
 
-          players.map { _._2 ! Won }
+          players.foreach { _._2 ! Won }
           endGame()
 
         case None => log.error("== Terminated actor not found ==")

@@ -27,7 +27,7 @@ class BoardActor extends Actor with ActorLogging {
   }
 
   def receive = LoggingReceive {
-    case message:Message => users map { _._2 ! message}
+    case message:Message => users foreach { _._2 ! message}
 
     case invite:Invitation =>
       users.find( u => u._1.id.get == invite.to ) match {
@@ -78,7 +78,7 @@ class BoardActor extends Actor with ActorLogging {
 
       users += (subscribe.user -> sender)
       context watch sender
-      users map { _._2 ! members }
+      users foreach { _._2 ! members }
 
     case Terminated(user) => terminate(user)
   }
@@ -93,11 +93,11 @@ class BoardActor extends Actor with ActorLogging {
 
     users -= node._1
     context unwatch node._2
-    users map { _._2 ! members }
+    users foreach { _._2 ! members }
 
     invitations
         .filter( u => u._1.id == node._1.id || u._2.id == node._1.id )
-        .map( invitations -= _._1 )
+        .foreach( invitations -= _._1 )
   }
 
   def terminate(ref : ActorRef) : Unit = {

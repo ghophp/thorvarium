@@ -50,7 +50,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
     "one of the users should win the game in case of the other lose connection" in new GameProbe {
 
-      assert(gameActor.players.size == 0)
+      assert(gameActor.players.isEmpty)
 
       gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
@@ -63,7 +63,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
     "if in 40 seconds both players have not selected persons and weapons the game end" in new GameProbe {
 
-      assert(gameActor.players.size == 0)
+      assert(gameActor.players.isEmpty)
 
       gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
@@ -74,7 +74,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
     "if both selected, proceed to game loop" in new GameProbe {
 
-      assert(gameActor.players.size == 0)
+      assert(gameActor.players.isEmpty)
 
       gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
@@ -91,7 +91,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
     "if game ended after loop, forward messages to players" in new GameProbe {
 
-      assert(gameActor.players.size == 0)
+      assert(gameActor.players.isEmpty)
 
       gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
@@ -104,8 +104,8 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, persons)
 
       assert(gameActor.gameLoop != null)
-      gameActor.gameLoop.players.map { p =>
-        p.persons.map(_._2.life = 0)
+      gameActor.gameLoop.players.foreach { p =>
+        p.persons.foreach(_._2.life = 0)
       }
 
       Thread.sleep(1000)
@@ -122,7 +122,7 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
 
     "if one of the users doesn't send the ready to turn in 40 seconds game end" in new GameProbe {
 
-      assert(gameActor.players.size == 0)
+      assert(gameActor.players.isEmpty)
 
       gameActorRef ! SubscribeGame(SessionSpec.testUser, probe1.ref)
       gameActorRef ! SubscribeGame(SessionSpec.testUser2, probe2.ref)
@@ -135,8 +135,8 @@ class GameActorSpec extends AbstractTestKit("GameActorSpec") with SpecificationL
       gameActorRef ! PlayerSet(SessionSpec.testUser2.id.get, persons)
 
       assert(gameActor.gameLoop != null)
-      gameActor.gameLoop.players.map { p =>
-        p.persons.map(_._2.life = 0)
+      gameActor.gameLoop.players.foreach { p =>
+        p.persons.foreach(_._2.life = 0)
       }
 
       Thread.sleep(1000)
