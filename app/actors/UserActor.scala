@@ -1,23 +1,36 @@
 package actors
 
-import akka.actor.Actor
-import akka.actor.ActorLogging
+import java.util.concurrent.TimeUnit
+
+import akka.actor._
 import akka.event.LoggingReceive
-import akka.actor.ActorRef
-import akka.actor.Props
 import game.models.GamingSet
 import models.{Person, User}
 import play.api.libs.json.{JsValue, Json}
 
+import scala.concurrent.duration.Duration
 import scala.xml.Utility
 
 class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
 
+  val system = ActorSystem("UserActor")
+
   var game: ActorRef = null
   var board: ActorRef = BoardActor()
+  var pingTimer : Cancellable = null
 
   override def preStart() = {
-     board ! Subscribe(user)
+    board ! Subscribe(user)
+    self ! Ping
+  }
+
+  def ping() = {
+    import system.dispatcher
+
+    pingTimer = system.scheduler.scheduleOnce(
+      Duration.create(5, TimeUnit.SECONDS),
+      self,
+      Ping)
   }
 
   def receive = LoggingReceive {
@@ -26,7 +39,10 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
       val t = (command \ "type").as[String]
       t match {
         case "message" =>
-          board ! Message(user, Utility.escape((command \ "content").as[String]))
+          val message: String = Utility.escape((command \ "content").as[String])
+          if (message.length <= 140) {
+            board ! Message(user, message)
+          }
         case "invitation" =>
           board ! Invitation(user, (command \ "to").as[Long])
         case "accept" =>
@@ -43,6 +59,8 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
           if (input != null) {
             game ! PlayerTurnSet(user.id.get, input)
           }
+        case "pong" =>
+          self ! Pong
         case other => log.error("Unhandled :: " + other)
       }
 
@@ -105,6 +123,13 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
         "type" -> "members",
         "value" -> members)
 
+    case Ping =>
+      out ! Json.obj("type" -> "ping")
+      ping()
+
+    case Pong =>
+      log.debug("== Client pong ==")
+
     case other => log.error("== Unhandled :: " + other + "==")
   }
 }
@@ -112,3 +137,6 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
 object UserActor {
   def props(user: User)(out: ActorRef) = Props(new UserActor(user, out))
 }
+
+object Ping
+object Pong
