@@ -15,13 +15,13 @@ trait Users extends SessionRepository {
 
       if (params.getOrElse(Map()).size >= 2) {
 
-        val nickname: String = params.get.get("nickname").get(0)
-        val password: String = params.get.get("password").get(0)
+        val nickname: String = params.get("nickname").head
+        val password: String = params.get("password").head
 
         if (!nickname.isEmpty && !password.isEmpty) {
 
           val users = User.findBy(nickname, password)
-          users.lift(0) match {
+          users.headOption match {
             case Some(user) => Ok(Json.obj(
               "status" -> "success",
               "uuid" -> sessionManager.authorize(user),
@@ -46,7 +46,7 @@ trait Users extends SessionRepository {
 
       if (params.getOrElse(Map()).size == 1) {
 
-        val uuid: String = params.get.get("auth").get(0)
+        val uuid: String = params.get("auth").head
         if (!uuid.isEmpty) {
 
           sessionManager.revoke(uuid)
@@ -68,7 +68,7 @@ trait Users extends SessionRepository {
 
       if (params.getOrElse(Map()).size == 1) {
 
-        val uuid: String = params.get.get("auth").get(0)
+        val uuid: String = params.get("auth").head
         if (!uuid.isEmpty) {
 
           sessionManager.authorized(uuid) match {

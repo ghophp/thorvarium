@@ -45,7 +45,7 @@ class GameLoop(var players : Set[Player]) {
   }
 
   def winner() : Long = {
-    players.filter( p => p.persons.count(_._2.life > 0) > 0 ).toList(0).user.id.get
+    players.filter( p => p.persons.count(_._2.life > 0) > 0 ).toList.head.user.id.get
   }
 
   def draw() : Boolean = {
@@ -57,12 +57,11 @@ class GameLoop(var players : Set[Player]) {
   }
 
   def update(elapsed : Double) = {
-
-    players.map { p =>
+    players.foreach { p =>
       applyCollisions(p.persons)
     }
 
-    players.map { p =>
+    players.foreach { p =>
       if (p.input != null) {
         applyMovements(p, elapsed)
       }
@@ -77,7 +76,7 @@ class GameLoop(var players : Set[Player]) {
 
   def applyMovements(p: Player, elapsed : Double) = {
     if (p.input.movements != null) {
-      p.input.movements.map { m =>
+      p.input.movements.foreach { m =>
 
         val person = p.persons(m._1)
         if (person.life > 0) {
@@ -103,8 +102,8 @@ class GameLoop(var players : Set[Player]) {
   }
 
   def applyCollisions(persons: Map[String, Person]) = {
-    persons.map { p =>
-      bullets.map { b =>
+    persons.foreach { p =>
+      bullets.foreach { b =>
         if (p._2 != b.person && b.collided(p._2)) {
           p._2.life -= b.power
           collisions += b
@@ -115,7 +114,7 @@ class GameLoop(var players : Set[Player]) {
   }
 
   def applyBullets(elapsed : Double) = {
-    bullets.map { b =>
+    bullets.foreach { b =>
       val speed = b.speed * elapsed
       if (b.x > 0 && b.x < GameLoop.SceneWidth &&
         b.y > 0 && b.y < GameLoop.SceneHeight) {
@@ -129,9 +128,9 @@ class GameLoop(var players : Set[Player]) {
 
   def parseWeapons() = {
     bullets = Set()
-    players.map { p =>
+    players.foreach { p =>
       if (p.input != null && p.input.weapons != null) {
-        p.input.weapons.map { m =>
+        p.input.weapons.foreach { m =>
 
           val person = p.persons(m._1)
           if (person.life > 0 && m._2 != null) {
@@ -176,7 +175,7 @@ class GameLoop(var players : Set[Player]) {
 
   def newTurn() = {
     turns += 1
-    players.map { _.input = null }
+    players.foreach { _.input = null }
     collisions = Set()
   }
 }

@@ -28,7 +28,7 @@ trait SessionRepositoryComponentImpl extends SessionRepository {
   class SessionRepositoryImpl extends Session {
 
     val redisUri = new URI(Play.current.configuration.getString("redis.default.uri").get)
-    var redisClient : RedisClient = null
+    var redisClient : RedisClient = _
 
     if (redisUri.getUserInfo != null &&
       !redisUri.getUserInfo.isEmpty) {
