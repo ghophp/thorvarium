@@ -100,8 +100,8 @@ object Person {
 
       val persons = personsJs.map { js =>
         val p = Person.findBy( (js._2 \ "id").asOpt[Long].getOrElse(0))
-        if (p.size > 0) {
-          js._1 -> p(0)
+        if (p.nonEmpty) {
+          js._1 -> p.head
         } else js._1 -> null
       }.filter( p => p._2 != null ).toMap
 
@@ -110,8 +110,8 @@ object Person {
         val weapons = personsJs.map { js =>
           val w1 = Weapon.findBy( (js._2 \ Person.WeaponSlot1).asOpt[Long].getOrElse(0))
           val w2 = Weapon.findBy( (js._2 \ Person.WeaponSlot2).asOpt[Long].getOrElse(0))
-          if (w1.size > 0 && w2.size > 0) {
-            js._1 -> Map[String, Weapon](Person.WeaponSlot1 -> w1(0), Person.WeaponSlot2 -> w2(0))
+          if (w1.nonEmpty && w2.nonEmpty) {
+            js._1 -> Map[String, Weapon](Person.WeaponSlot1 -> w1.head, Person.WeaponSlot2 -> w2.head)
           } else js._1 -> Map.empty[String, Weapon]
         }.toMap
 

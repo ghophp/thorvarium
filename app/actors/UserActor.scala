@@ -15,9 +15,9 @@ class UserActor(user: User, out: ActorRef) extends Actor with ActorLogging {
 
   val system = ActorSystem("UserActor")
 
-  var game: ActorRef = null
+  var game: ActorRef = _
   var board: ActorRef = BoardActor()
-  var pingTimer : Cancellable = null
+  var pingTimer : Cancellable = _
 
   override def preStart() = {
     board ! Subscribe(user)

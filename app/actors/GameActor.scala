@@ -18,8 +18,8 @@ class GameActor(id: String) extends Actor with ActorLogging {
   var players = Map.empty[Player, ActorRef]
   var board : ActorRef = BoardActor()
 
-  var stepTimer : Cancellable = null
-  var gameLoop : GameLoop = null
+  var stepTimer : Cancellable = _
+  var gameLoop : GameLoop = _
   var readyToTurn : mutable.MutableList[Long] = mutable.MutableList.empty
 
   def receive = LoggingReceive {
